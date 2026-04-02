@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>鱼皮 AI 学习小程序 · 设计系统板</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&family=Noto+Sans+SC:wght@400;500;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --panel: rgba(255,255,255,.9);
+      --text: #18303d;
+      --muted: #62737c;
+      --mint: #49b7b3;
+      --mint-soft: #edf9f8;
+      --sky: #7fbef4;
+      --sky-soft: #eef7ff;
+      --sun: #ffd56f;
+      --sun-soft: #fff5da;
+      --coral: #ff8878;
+      --coral-soft: #fff0ec;
+      --success: #7fc66e;
+      --success-soft: #eef9ea;
+      --shadow: 0 18px 50px rgba(26, 68, 80, 0.12);
+      --radius-xl: 32px;
+      --radius-lg: 24px;
+      --phone-width: 392px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Noto Sans SC", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 12% 8%, rgba(255,213,111,.36), transparent 14%),
+        radial-gradient(circle at 88% 10%, rgba(127,190,244,.28), transparent 16%),
+        linear-gradient(180deg, #f9fdfd 0%, #eef7f7 100%);
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(87, 128, 138, 0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(87, 128, 138, 0.025) 1px, transparent 1px);
+      background-size: 100% 36px, 36px 100%;
+      opacity: .42;
+    }
+    .page { padding: 32px 20px 56px; position: relative; }
+    .hero {
+      max-width: 1360px;
+      margin: 0 auto 24px;
+      display: grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap: 18px;
+    }
+    .hero-main,.hero-side,.phone,.panel,.swatch,.component,.motion,.toolbar,.sample {
+      background: var(--panel);
+      border: 1.5px solid rgba(73,183,179,.14);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+    }
+    .hero-main,.hero-side { padding: 28px; }
+    .eyebrow,.token,.chip,.label,.metric,h1,h2,h3,.screen-title {
+      font-family: "ZCOOL KuaiLe", cursive;
+      margin: 0;
+    }
+    .eyebrow {
+      display: inline-block;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: #fff;
+      color: #2a8c88;
+      font-size: 14px;
+      border: 1.5px solid rgba(73,183,179,.18);
+    }
+    h1 { margin-top: 16px; font-size: clamp(34px, 5vw, 54px); line-height: 1.08; }
+    .lead,.hero-side p,.subtitle,.body { font-size: 16px; line-height: 1.75; color: #4c656f; }
+    .lead { max-width: 760px; margin: 14px 0 18px; }
+    .hero-side {
+      background:
+        radial-gradient(circle at top right, rgba(127,190,244,.24), transparent 30%),
+        linear-gradient(180deg, rgba(255,255,255,.95), rgba(246,251,251,.95));
+      display: grid;
+      gap: 14px;
+      align-content: center;
+    }
+    .hero-side ul { margin: 0; padding-left: 20px; color: #4c656f; line-height: 1.8; font-size: 15px; }
+    .board {
+      max-width: 1360px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(280px, 1fr));
+      gap: 22px;
+    }
+    .phone {
+      max-width: var(--phone-width);
+      margin: 0 auto;
+      padding: 12px;
+      border-radius: 38px;
+      position: relative;
+      background: linear-gradient(180deg, #f7fcfc 0%, #eff7f7 100%);
+    }
+    .phone::before {
+      content: "";
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      width: 112px;
+      height: 20px;
+      transform: translateX(-50%);
+      border-radius: 999px;
+      background: #243640;
+    }
+    .screen {
+      min-height: 840px;
+      border-radius: 28px;
+      overflow: hidden;
+      background: linear-gradient(180deg, rgba(255,255,255,.95), rgba(249,253,253,.92));
+      border: 1px solid rgba(73,183,179,.12);
+      padding: 22px 18px 24px;
+    }
+    .statusbar,.toolbar { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+    .statusbar { margin-bottom: 16px; font-size: 13px; color: #6b7f8d; font-weight: 700; }
+    .toolbar { padding: 8px 10px; margin-bottom: 14px; border-radius: 20px; }
+    .screen-title { font-size: 28px; line-height: 1.2; margin-bottom: 8px; }
+    .subtitle { margin: 0 0 14px; font-size: 15px; }
+    .panel,.swatch,.component,.motion,.sample {
+      padding: 16px;
+      margin-bottom: 14px;
+      border-radius: var(--radius-lg);
+      background: rgba(255,255,255,.95);
+    }
+    .panel h3,.swatch h3,.component h3,.motion h3,.sample h3 { font-size: 21px; margin-bottom: 10px; }
+    .token-row,.swatches,.buttons,.states,.metrics,.chips { display: flex; flex-wrap: wrap; gap: 10px; }
+    .token,.chip,.label {
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 13px;
+      background: #fff;
+      color: #52727b;
+      border: 1px solid #ddeaea;
+    }
+    .swatches { display: grid; grid-template-columns: repeat(2, 1fr); }
+    .tile {
+      min-height: 88px;
+      padding: 12px;
+      border-radius: 18px;
+      background: #f9fcfc;
+      border: 1px solid #dfecec;
+    }
+    .dot { width: 28px; height: 28px; border-radius: 50%; margin-bottom: 8px; border: 1px solid rgba(0,0,0,.05); }
+    .tile strong { display: block; font-size: 15px; margin-bottom: 4px; }
+    .tile span,.sample span { color: #61737d; font-size: 14px; line-height: 1.65; }
+    .btn {
+      width: 100%;
+      min-height: 48px;
+      border: none;
+      border-radius: 18px;
+      font: inherit;
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform 180ms ease;
+    }
+    .btn.primary { background: linear-gradient(180deg, #49b7b3 0%, #2f9a97 100%); color: #fff; }
+    .btn.secondary { background: var(--sky-soft); color: #4878a7; }
+    .btn.warn { background: var(--sun-soft); color: #8f6811; }
+    .btn.ghost { background: #f4f8f8; color: #57707b; }
+    .btn:hover { transform: translateY(-2px); }
+    .input {
+      min-height: 90px;
+      padding: 14px;
+      border-radius: 18px;
+      border: 1.5px solid #dae8e8;
+      background: #fbfdfd;
+      line-height: 1.7;
+      color: #587079;
+    }
+    .state { flex: 1 1 100%; min-height: 84px; padding: 12px; border-radius: 18px; border: 1px solid #ddeaea; }
+    .state.good { background: var(--success-soft); }
+    .state.info { background: var(--sky-soft); }
+    .state.bad { background: var(--coral-soft); }
+    .metrics .tile { flex: 1 1 30%; min-width: 92px; text-align: center; }
+    .metric { display: block; font-size: 24px; color: #2f9996; margin-bottom: 4px; }
+    .motion-bar {
+      margin-top: 12px;
+      height: 12px;
+      border-radius: 999px;
+      background: #e7f0f0;
+      overflow: hidden;
+    }
+    .motion-bar span {
+      display: block;
+      height: 100%;
+      width: 70%;
+      background: linear-gradient(90deg, var(--mint), var(--sky), var(--sun));
+      animation: slide 2.1s ease-in-out infinite alternate;
+    }
+    .footer-note {
+      max-width: 1360px;
+      margin: 24px auto 0;
+      padding: 14px 18px;
+      border-radius: 20px;
+      background: rgba(255,255,255,.72);
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.75;
+    }
+    @keyframes slide { from { transform: translateX(-8%); } to { transform: translateX(10%); } }
+    @media (max-width: 1100px) {
+      .hero { grid-template-columns: 1fr; }
+      .board { grid-template-columns: repeat(2, minmax(280px, 1fr)); }
+    }
+    @media (max-width: 760px) {
+      .page { padding: 18px 10px 34px; }
+      .board { grid-template-columns: 1fr; }
+      .screen { min-height: auto; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .btn,.motion-bar span { transition: none; animation: none; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="hero">
+      <div class="hero-main">
+        <span class="eyebrow">设计系统板</span>
+        <h1>把更轻盈的界面语言<br />变成可复用规则</h1>
+        <p class="lead">这版设计系统只保留对开发最有用的内容：颜色、按钮、表单、反馈、动效节奏。目的不是展示，而是帮助你后续把 HTML 原型稳定映射到真实小程序页面。</p>
+        <div class="chips">
+          <span class="chip">更冷静的主色</span>
+          <span class="chip">更高的可读性</span>
+          <span class="chip">更轻的装饰密度</span>
+        </div>
+      </div>
+      <aside class="hero-side">
+        <p>这套规则的核心是三件事：</p>
+        <ul>
+          <li>主阅读区尽量白，背景只负责营造气氛。</li>
+          <li>状态色明确但不过量，避免看久了发累。</li>
+          <li>动效只服务反馈，不打断学习节奏。</li>
+        </ul>
+      </aside>
+    </section>
+
+    <section class="board">
+      <article class="phone">
+        <div class="screen">
+          <div class="statusbar"><span>10:20</span><span>颜色 / 字体</span></div>
+          <div class="toolbar"><span class="label" style="background:var(--mint-soft);color:#2d8d89;">基础令牌</span><span style="font-size:13px;color:#6b7f8d;">适合长时间阅读</span></div>
+          <h2 class="screen-title">颜色与字体</h2>
+          <p class="subtitle">主色从暖黄改为薄荷青，黄色只保留在奖励和重点提示里。</p>
+
+          <div class="swatch">
+            <h3>主配色</h3>
+            <div class="swatches">
+              <div class="tile"><div class="dot" style="background:var(--mint);"></div><strong>薄荷青</strong><span>主按钮、主进度</span></div>
+              <div class="tile"><div class="dot" style="background:var(--sky);"></div><strong>浅天蓝</strong><span>信息、次级强调</span></div>
+              <div class="tile"><div class="dot" style="background:var(--sun);"></div><strong>柔和黄</strong><span>奖励、轻提醒</span></div>
+              <div class="tile"><div class="dot" style="background:var(--coral);"></div><strong>珊瑚红</strong><span>错误、风险提示</span></div>
+            </div>
+          </div>
+
+          <div class="sample">
+            <h3>字体搭配</h3>
+            <div class="body"><strong style="display:block;font-family:'ZCOOL KuaiLe',cursive;font-size:24px;color:#2a4c58;">ZCOOL KuaiLe</strong>用于标题、贴纸、关键数字</div>
+            <div class="body" style="margin-top:10px;"><strong style="display:block;font-size:18px;color:#2a4c58;">Noto Sans SC</strong>用于正文、输入框、讲解内容</div>
+          </div>
+        </div>
+      </article>
+
+      <article class="phone">
+        <div class="screen">
+          <div class="statusbar"><span>10:22</span><span>组件规范</span></div>
+          <div class="toolbar"><span class="label" style="background:var(--sky-soft);color:#4b79aa;">按钮 / 表单 / 状态</span><span style="font-size:13px;color:#6b7f8d;">移动端优先</span></div>
+          <h2 class="screen-title">基础组件</h2>
+          <p class="subtitle">按钮高度统一不低于 48px，表单和状态卡片尽量短句表达。</p>
+
+          <div class="component">
+            <h3>按钮</h3>
+            <div class="buttons" style="display:grid;grid-template-columns:1fr;">
+              <button class="btn primary">开始生成</button>
+              <button class="btn secondary">查看解析</button>
+              <button class="btn warn">生成海报</button>
+              <button class="btn ghost">稍后再看</button>
+            </div>
+          </div>
+
+          <div class="component">
+            <h3>输入与状态</h3>
+            <div class="input">在这里输入一句话、一段文本，或者直接粘贴网页链接。</div>
+            <div class="states" style="margin-top:10px;display:grid;grid-template-columns:1fr;">
+              <div class="state info"><strong style="display:block;margin-bottom:4px;">处理中</strong><span>正在生成题目，请稍等。</span></div>
+              <div class="state good"><strong style="display:block;margin-bottom:4px;">答对了</strong><span>你已经掌握这个知识点。</span></div>
+              <div class="state bad"><strong style="display:block;margin-bottom:4px;">答错了</strong><span>重点看看“为什么错”。</span></div>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="phone">
+        <div class="screen">
+          <div class="statusbar"><span>10:24</span><span>反馈节奏</span></div>
+          <div class="toolbar"><span class="label" style="background:var(--sun-soft);color:#8f6811;">动效与数据</span><span style="font-size:13px;color:#6b7f8d;">轻动效即可</span></div>
+          <h2 class="screen-title">交互节奏</h2>
+          <p class="subtitle">小程序最重要的是快和清楚，动效只用来强化用户已经发生的动作。</p>
+
+          <div class="motion">
+            <h3>反馈时间</h3>
+            <div class="metrics">
+              <div class="tile"><span class="metric">0.2s</span><span>选项变色</span></div>
+              <div class="tile"><span class="metric">0.3s</span><span>弹出讲解</span></div>
+              <div class="tile"><span class="metric">1.0s</span><span>奖励结束</span></div>
+            </div>
+            <div class="motion-bar"><span></span></div>
+          </div>
+
+          <div class="panel">
+            <h3>建议保留</h3>
+            <div class="token-row">
+              <span class="token">明显 focus 状态</span>
+              <span class="token">按钮禁用态</span>
+              <span class="token">简短错误提示</span>
+              <span class="token">支持 reduced-motion</span>
+            </div>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <div class="footer-note">如果后续继续推进到真实开发，我建议直接把这份文件里的颜色、圆角、间距、按钮和状态卡片抽成通用 token 和基础组件，避免每个页面再次各画各的。</div>
+  </main>
+</body>
+</html>

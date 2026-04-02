@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>鱼皮 AI 学习小程序 · 核心流程原型</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&family=Noto+Sans+SC:wght@400;500;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #edf7f7;
+      --panel: rgba(255, 255, 255, 0.88);
+      --text: #18303d;
+      --muted: #61727c;
+      --primary: #3aa6a4;
+      --primary-deep: #248885;
+      --accent: #ffd36c;
+      --accent-soft: #fff1c8;
+      --success: #82c870;
+      --info: #87bff5;
+      --danger: #ff7e70;
+      --shadow: 0 18px 50px rgba(27, 70, 84, 0.12);
+      --radius-xl: 32px;
+      --radius-lg: 24px;
+      --radius-md: 18px;
+      --phone-width: 392px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Noto Sans SC", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 12% 8%, rgba(255, 211, 108, 0.55), transparent 15%),
+        radial-gradient(circle at 88% 12%, rgba(135, 191, 245, 0.34), transparent 16%),
+        linear-gradient(180deg, #f8fcfc 0%, #eef6f5 100%);
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(74, 122, 132, 0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(74, 122, 132, 0.03) 1px, transparent 1px);
+      background-size: 100% 36px, 36px 100%;
+      opacity: 0.45;
+    }
+
+    .page { position: relative; padding: 32px 20px 56px; }
+
+    .hero {
+      max-width: 1360px;
+      margin: 0 auto 24px;
+      display: grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap: 18px;
+    }
+
+    .hero-card,
+    .hero-side,
+    .phone,
+    .bubble,
+    .panel,
+    .option,
+    .report,
+    .poster,
+    .toolbar {
+      background: var(--panel);
+      border: 1.5px solid rgba(36, 136, 133, 0.16);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+    }
+
+    .hero-card,
+    .hero-side {
+      padding: 28px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .eyebrow,
+    .chip,
+    .small-tag,
+    .score,
+    .caption,
+    h1,
+    h2,
+    h3,
+    .screen-title {
+      font-family: "ZCOOL KuaiLe", cursive;
+      margin: 0;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: #fff;
+      border: 1.5px solid rgba(36, 136, 133, 0.2);
+      color: var(--primary-deep);
+      font-size: 14px;
+    }
+
+    h1 {
+      margin-top: 16px;
+      font-size: clamp(34px, 5vw, 56px);
+      line-height: 1.08;
+    }
+
+    .hero-text {
+      max-width: 720px;
+      margin: 14px 0 18px;
+      font-size: 17px;
+      line-height: 1.72;
+      color: #35505c;
+    }
+
+    .hero-tags,
+    .chips,
+    .stats,
+    .actions,
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .chip {
+      padding: 9px 14px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.9);
+      border: 1.5px solid rgba(36, 136, 133, 0.18);
+      font-size: 13px;
+      color: var(--primary-deep);
+    }
+
+    .hero-side {
+      display: grid;
+      align-content: center;
+      gap: 14px;
+      background:
+        radial-gradient(circle at top right, rgba(255, 211, 108, 0.5), transparent 34%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(248, 252, 252, 0.92));
+    }
+
+    .hero-side p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.75;
+    }
+
+    .mascot-wrap {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .mascot-note {
+      padding: 14px 16px;
+      border-radius: 22px;
+      background: rgba(255, 255, 255, 0.88);
+      border: 1px solid rgba(36, 136, 133, 0.16);
+      line-height: 1.7;
+      color: #45606c;
+      font-size: 15px;
+    }
+
+    .board {
+      max-width: 1360px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(280px, 1fr));
+      gap: 22px;
+      align-items: start;
+    }
+
+    .phone {
+      max-width: var(--phone-width);
+      margin: 0 auto;
+      padding: 12px;
+      position: relative;
+      background: linear-gradient(180deg, #f5fbfb 0%, #eef7f6 100%);
+      border-radius: 38px;
+    }
+
+    .phone::before {
+      content: "";
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      width: 112px;
+      height: 20px;
+      transform: translateX(-50%);
+      border-radius: 999px;
+      background: #24353e;
+    }
+
+    .screen {
+      min-height: 820px;
+      border-radius: 28px;
+      overflow: hidden;
+      background: linear-gradient(180deg, rgba(255,255,255,.94), rgba(250,253,253,.92));
+      border: 1px solid rgba(36, 136, 133, 0.12);
+      padding: 22px 18px 24px;
+      position: relative;
+    }
+
+    .screen::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: radial-gradient(circle at 100% 0%, rgba(255, 211, 108, 0.22), transparent 22%);
+    }
+
+    .statusbar,
+    .topline {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .statusbar {
+      margin-bottom: 18px;
+      font-size: 13px;
+      font-weight: 700;
+      color: #50656e;
+    }
+
+    .toolbar {
+      padding: 8px 10px;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      border-radius: 20px;
+    }
+
+    .topline { margin-bottom: 14px; }
+
+    .screen-title {
+      font-size: 28px;
+      line-height: 1.2;
+    }
+
+    .subtitle {
+      margin: 0 0 16px;
+      font-size: 15px;
+      line-height: 1.75;
+      color: var(--muted);
+    }
+
+    .small-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 12px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: #8f6612;
+      font-size: 13px;
+    }
+
+    .bubble,
+    .panel,
+    .report,
+    .poster {
+      padding: 16px;
+      margin-bottom: 14px;
+      border-radius: var(--radius-lg);
+      background: rgba(255,255,255,.94);
+    }
+
+    .bubble {
+      display: grid;
+      grid-template-columns: 54px 1fr;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .panel h3,
+    .report h3,
+    .poster h3 {
+      font-size: 21px;
+      margin-bottom: 10px;
+    }
+
+    .input {
+      width: 100%;
+      min-height: 124px;
+      padding: 16px;
+      border-radius: 20px;
+      border: 1.5px solid #d8e8e8;
+      background: #f9fcfc;
+      color: var(--text);
+      font: inherit;
+      line-height: 1.75;
+      resize: none;
+    }
+
+    .progress {
+      height: 12px;
+      border-radius: 999px;
+      background: #e6f1f1;
+      overflow: hidden;
+      margin: 10px 0 12px;
+    }
+
+    .fill {
+      height: 100%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--primary), var(--info));
+    }
+
+    .stats { margin-top: 12px; }
+
+    .stat {
+      flex: 1 1 30%;
+      min-width: 92px;
+      padding: 12px;
+      border-radius: 18px;
+      background: #f7fbfb;
+      border: 1px solid #dceaea;
+      text-align: center;
+    }
+
+    .score {
+      display: block;
+      font-size: 23px;
+      color: var(--primary-deep);
+      margin-bottom: 4px;
+    }
+
+    .caption {
+      font-size: 12px;
+      color: #6a8088;
+    }
+
+    .primary,
+    .secondary,
+    .ghost {
+      width: 100%;
+      min-height: 48px;
+      border: none;
+      border-radius: 18px;
+      font: inherit;
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform 180ms ease, box-shadow 180ms ease, background 180ms ease;
+    }
+
+    .primary {
+      background: linear-gradient(180deg, #49b7b3 0%, #2e9d9a 100%);
+      color: #fff;
+      box-shadow: 0 12px 24px rgba(58, 166, 164, 0.22);
+    }
+
+    .secondary {
+      background: #eef8f8;
+      color: var(--primary-deep);
+    }
+
+    .ghost {
+      background: #fff7df;
+      color: #8f6612;
+    }
+
+    .primary:hover,
+    .secondary:hover,
+    .ghost:hover,
+    .option:hover { transform: translateY(-2px); }
+
+    .primary:focus-visible,
+    .secondary:focus-visible,
+    .ghost:focus-visible,
+    .option:focus-visible,
+    .input:focus-visible {
+      outline: 3px solid rgba(135, 191, 245, 0.7);
+      outline-offset: 2px;
+    }
+
+    .option {
+      display: grid;
+      grid-template-columns: 40px 1fr auto;
+      gap: 12px;
+      align-items: center;
+      padding: 14px;
+      margin-bottom: 10px;
+      border-radius: 18px;
+      background: #ffffff;
+      cursor: pointer;
+      transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
+    }
+
+    .option.good { background: #eff9ec; }
+    .option.bad { background: #fff0ec; }
+
+    .key {
+      width: 40px;
+      height: 40px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: #f0f7f7;
+      color: var(--primary-deep);
+      font-weight: 800;
+    }
+
+    .explain {
+      margin-top: 12px;
+      padding: 14px;
+      border-radius: 18px;
+      background: #f8fcfc;
+      color: #47606a;
+      line-height: 1.75;
+      font-size: 15px;
+      border: 1px solid #dbeaea;
+    }
+
+    .report-top {
+      display: grid;
+      grid-template-columns: 116px 1fr;
+      gap: 14px;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+
+    .ring {
+      width: 116px;
+      height: 116px;
+      border-radius: 50%;
+      background: conic-gradient(var(--primary) 0 78%, #dceced 78% 100%);
+      display: grid;
+      place-items: center;
+      position: relative;
+    }
+
+    .ring::before {
+      content: "";
+      position: absolute;
+      inset: 12px;
+      border-radius: 50%;
+      background: #fff;
+    }
+
+    .ring span {
+      position: relative;
+      z-index: 1;
+      font-family: "ZCOOL KuaiLe", cursive;
+      font-size: 28px;
+      color: var(--primary-deep);
+    }
+
+    .legend span {
+      padding: 7px 11px;
+      border-radius: 999px;
+      font-size: 13px;
+      background: #f4f9f9;
+      color: #537079;
+    }
+
+    .poster {
+      position: relative;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at top right, rgba(255, 211, 108, 0.58), transparent 34%),
+        linear-gradient(180deg, #fffaf0 0%, #f5fbfb 100%);
+      min-height: 210px;
+    }
+
+    .poster-quote {
+      max-width: 220px;
+      font-family: "ZCOOL KuaiLe", cursive;
+      font-size: 28px;
+      line-height: 1.35;
+      color: #395662;
+    }
+
+    .qr {
+      position: absolute;
+      right: 16px;
+      bottom: 16px;
+      width: 84px;
+      height: 84px;
+      border-radius: 18px;
+      background:
+        linear-gradient(90deg, #17303d 12%, transparent 12%, transparent 24%, #17303d 24%, #17303d 36%, transparent 36%, transparent 48%, #17303d 48%, #17303d 60%, transparent 60%, transparent 72%, #17303d 72%),
+        linear-gradient(#17303d 12%, transparent 12%, transparent 24%, #17303d 24%, #17303d 36%, transparent 36%, transparent 48%, #17303d 48%, #17303d 60%, transparent 60%, transparent 72%, #17303d 72%);
+      background-size: 100% 12px, 12px 100%;
+      background-color: #fff;
+      border: 1.5px solid rgba(36, 136, 133, 0.14);
+    }
+
+    .footer-note {
+      max-width: 1360px;
+      margin: 24px auto 0;
+      padding: 14px 18px;
+      border-radius: 20px;
+      background: rgba(255,255,255,.72);
+      color: var(--muted);
+      line-height: 1.75;
+      font-size: 15px;
+    }
+
+    svg { display: block; }
+
+    @media (max-width: 1100px) {
+      .hero { grid-template-columns: 1fr; }
+      .board { grid-template-columns: repeat(2, minmax(280px, 1fr)); }
+    }
+
+    @media (max-width: 760px) {
+      .page { padding: 18px 10px 34px; }
+      .board { grid-template-columns: 1fr; }
+      .report-top { grid-template-columns: 1fr; }
+      .screen { min-height: auto; }
+      .hero-text { font-size: 16px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .primary,
+      .secondary,
+      .ghost,
+      .option { transition: none; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="hero">
+      <div class="hero-card">
+        <span class="eyebrow">核心流程原型</span>
+        <h1>更轻松、更耐看、<br />更像真实小程序</h1>
+        <p class="hero-text">这次重构把视觉从大面积暖黄，调整为更清爽的薄荷蓝绿色系。说明文案缩短，界面名称直接对应真实使用场景，方便后续继续落到小程序页面开发。</p>
+        <div class="hero-tags">
+          <span class="chip">首页输入更直接</span>
+          <span class="chip">答题反馈更清楚</span>
+          <span class="chip">报告页更利于分享</span>
+        </div>
+      </div>
+      <aside class="hero-side">
+        <div class="mascot-wrap">
+          <svg viewBox="0 0 180 180" aria-hidden="true">
+            <defs>
+              <linearGradient id="fishBody" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#5bc5c2" />
+                <stop offset="100%" stop-color="#2f9493" />
+              </linearGradient>
+            </defs>
+            <ellipse cx="92" cy="90" rx="62" ry="48" fill="url(#fishBody)" />
+            <path d="M26 89L2 66V112L26 89Z" fill="#2f9493" />
+            <path d="M82 50C92 34 112 31 128 38" stroke="#1d6e6c" stroke-width="6" stroke-linecap="round" fill="none" />
+            <circle cx="112" cy="78" r="11" fill="#fff" />
+            <circle cx="116" cy="80" r="5" fill="#17303d" />
+            <circle cx="117" cy="79" r="1.5" fill="#fff" />
+            <path d="M111 109C100 121 82 122 67 113" stroke="#17303d" stroke-width="6" stroke-linecap="round" fill="none" />
+            <circle cx="90" cy="92" r="8" fill="#fff6d9" opacity=".7" />
+            <path d="M128 100C142 108 147 122 146 135" stroke="#ffcf6c" stroke-width="7" stroke-linecap="round" fill="none" />
+            <path d="M146 135C138 128 129 127 121 131" stroke="#ffcf6c" stroke-width="7" stroke-linecap="round" fill="none" />
+          </svg>
+          <div class="mascot-note">小鱼教练负责把复杂知识压缩成能读、能答、能复盘的学习流程。</div>
+        </div>
+        <p>页面重点不再强调“展示稿语气”，而是模拟用户真正使用时会看到的内容和按钮。</p>
+      </aside>
+    </section>
+
+    <section class="board">
+      <article class="phone">
+        <div class="screen">
+          <div class="statusbar"><span>9:41</span><span>4G · 100%</span></div>
+          <div class="toolbar">
+            <span class="small-tag">新建学习</span>
+            <span style="font-size:13px;color:#64808b;">已为你准备 3 个示例</span>
+          </div>
+
+          <div class="topline">
+            <div><h2 class="screen-title">想学什么？</h2></div>
+            <svg width="58" height="58" viewBox="0 0 58 58" aria-hidden="true">
+              <circle cx="29" cy="29" r="29" fill="#eaf7f7" />
+              <path d="M11 30C16 15 39 11 47 24C52 33 47 46 35 47C23 48 15 40 11 30Z" fill="#4db8b4" />
+              <circle cx="36" cy="25" r="5" fill="#fff" />
+              <circle cx="38" cy="25" r="2.3" fill="#17303d" />
+              <path d="M35 36C31 40 24 40 20 36" stroke="#17303d" stroke-width="3.5" stroke-linecap="round" fill="none" />
+            </svg>
+          </div>
+
+          <p class="subtitle">输入一句话、一段文字，AI 会自动整理成一组可闯关的题目。</p>
+
+          <div class="bubble">
+            <svg viewBox="0 0 56 56" width="54" height="54" aria-hidden="true">
+              <circle cx="28" cy="28" r="28" fill="#fff1c8" />
+              <path d="M16 30C17 19 27 12 37 16C45 20 48 32 42 40C35 48 20 47 16 30Z" fill="#ffd36c" />
+              <circle cx="33" cy="25" r="4.5" fill="#fff" />
+              <circle cx="34.5" cy="25" r="2.2" fill="#17303d" />
+            </svg>
+            <div>
+              <strong>示例主题</strong>
+              <div style="margin-top:4px;color:#58717c;line-height:1.7;font-size:15px;">RAG 是什么？和传统搜索有什么区别？</div>
+            </div>
+          </div>
+
+          <label for="topic" style="display:block;font-size:15px;font-weight:700;margin-bottom:8px;">学习内容</label>
+          <textarea id="topic" class="input">我想快速搞懂什么是 RAG，它和传统搜索有什么区别？最好通过几个问题帮助我记住重点。</textarea>
+
+          <div class="chips" style="margin-top: 12px;">
+            <span class="chip">AI 基础</span>
+            <span class="chip">面试知识点</span>
+            <span class="chip">产品入门</span>
+          </div>
+
+          <div class="actions" style="margin-top: 16px;">
+            <button class="primary">开始生成</button>
+            <button class="secondary">换个示例</button>
+          </div>
+
+          <div class="panel">
+            <h3>生成进度</h3>
+            <div class="progress"><div class="fill" style="width:72%"></div></div>
+            <div class="legend">
+              <span>已清洗输入</span>
+              <span>正在出题</span>
+              <span>准备返回</span>
+            </div>
+          </div>
+
+          <div class="stats">
+            <div class="stat"><span class="score">5题</span><span class="caption">默认题量</span></div>
+            <div class="stat"><span class="score">3类</span><span class="caption">题型组合</span></div>
+            <div class="stat"><span class="score">1份</span><span class="caption">学习报告</span></div>
+          </div>
+        </div>
+      </article>
+
+      <article class="phone">
+        <div class="screen">
+          <div class="statusbar"><span>9:43</span><span>第 3 / 5 题</span></div>
+          <div class="toolbar">
+            <span class="small-tag" style="background:#e8f6ff;color:#4d78a2;">RAG 入门</span>
+            <strong style="font-size:14px;color:#2b8e8b;">XP 180</strong>
+          </div>
+
+          <h2 class="screen-title">继续答题</h2>
+          <p class="subtitle">选项更清晰，题干更聚焦，不再堆太多解释性文字。</p>
+
+          <div class="panel">
+            <div class="small-tag" style="background:#eef8ff;color:#537ca4;">多选题</div>
+            <h3 style="margin-top:8px;line-height:1.45;">RAG 最核心的优势是什么？</h3>
+            <div class="subtitle" style="margin-top:8px;margin-bottom:0;">请选择所有正确答案。</div>
+          </div>
+
+          <button class="option good" aria-label="选项A"><span class="key">A</span><span>引入外部知识，减少无依据回答</span><span style="color:#3a8d32;font-weight:800;">✓</span></button>
+          <button class="option bad" aria-label="选项B"><span class="key">B</span><span>保证回答永远百分之百正确</span><span style="color:#d45d54;font-weight:800;">✕</span></button>
+          <button class="option good" aria-label="选项C"><span class="key">C</span><span>回答更贴近最新资料或私有数据</span><span style="color:#3a8d32;font-weight:800;">✓</span></button>
+          <button class="option" aria-label="选项D"><span class="key">D</span><span>本质上只是把模型参数量翻倍</span><span style="color:#95aab4;font-weight:800;">○</span></button>
+
+          <div class="explain"><strong>答案讲解</strong><br />RAG 的关键是“先检索，再回答”。它能把外部资料带进回答过程，但并不等于自动保证完全正确，所以仍然要关注资料质量和结果校验。</div>
+
+          <div class="actions" style="margin-top:14px;">
+            <button class="primary">下一题</button>
+            <button class="ghost">查看完整解析</button>
+          </div>
+
+          <div class="panel">
+            <h3>当前进度</h3>
+            <div class="progress"><div class="fill" style="width:60%; background:linear-gradient(90deg,#82c870,#55b7af);"></div></div>
+            <div class="legend">
+              <span>答对 2 题</span>
+              <span>剩余 2 题</span>
+              <span>已获得 180 XP</span>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="phone">
+        <div class="screen">
+          <div class="statusbar"><span>9:47</span><span>已完成</span></div>
+          <div class="toolbar">
+            <span class="small-tag" style="background:#edf8eb;color:#4a7c3f;">本次掌握度</span>
+            <span style="font-size:13px;color:#64808b;">可保存分享</span>
+          </div>
+
+          <h2 class="screen-title">本次学习报告</h2>
+          <p class="subtitle">报告先给结论，再给重点，避免一屏塞太多信息。</p>
+
+          <div class="report">
+            <div class="report-top">
+              <div class="ring"><span>78%</span></div>
+              <div>
+                <h3>RAG 入门</h3>
+                <div style="margin-top:8px;color:#54707b;line-height:1.72;font-size:15px;">基础概念已经掌握，对“可靠性边界”还需要再巩固一轮。</div>
+              </div>
+            </div>
+            <div class="legend">
+              <span>答对 4 / 5</span>
+              <span>用时 3 分 28 秒</span>
+            </div>
+          </div>
+
+          <div class="report">
+            <h3>这次记住 3 件事</h3>
+            <ul style="margin:0;padding-left:20px;color:#4f6670;line-height:1.85;font-size:15px;">
+              <li>RAG 是检索加生成，不是单纯让模型更大。</li>
+              <li>它提升的是依据感和时效性。</li>
+              <li>最后一步仍然要校验回答质量。</li>
+            </ul>
+          </div>
+
+          <div class="poster">
+            <h3>分享海报</h3>
+            <div class="poster-quote">把知识做成关卡，记忆会更深。</div>
+            <div class="qr"></div>
+          </div>
+
+          <div class="actions">
+            <button class="primary">生成海报</button>
+            <button class="secondary">再练一轮错题</button>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <div class="footer-note">这版核心流程重点解决了三件事：阅读压力更小、画面更清爽、页面语言更像真实产品。卡通形象全部用 SVG 自绘，可继续替换成你的正式品牌形象。</div>
+  </main>
+</body>
+</html>
