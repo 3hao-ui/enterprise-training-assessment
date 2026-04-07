@@ -8,6 +8,9 @@ Desktop.ini
 .vscode/
 .idea/
 
+# Playwright MCP
+.playwright-mcp/
+
 # Logs
 *.log
 
@@ -16,8 +19,13 @@ __pycache__/
 *.pyc
 .venv/
 venv/
+.env
 
 # Node
 node_modules/
 dist/
 build/
+.swc/
+
+# WeChat
+project.private.config.json

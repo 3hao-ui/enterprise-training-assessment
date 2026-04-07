@@ -1,0 +1,109 @@
+.profile-page {
+  min-height: 100vh;
+  background: var(--bg-primary, #f6f4ef);
+}
+
+.status-bar-space {
+  height: env(safe-area-inset-top, 44px);
+}
+
+.nav-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 88px;
+  padding: 0 32px;
+
+  .nav-title {
+    font-size: 36px;
+    font-weight: 700;
+    color: #1a1a1a;
+  }
+}
+
+.profile-content {
+  padding: 0 32px;
+}
+
+.avatar-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 48px 0 32px;
+
+  .avatar-placeholder {
+    width: 128px;
+    height: 128px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #ff7a2f, #ffb347);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+  }
+
+  .avatar-emoji {
+    font-size: 56px;
+  }
+
+  .nickname {
+    font-size: 36px;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin-bottom: 8px;
+  }
+
+  .slogan {
+    font-size: 26px;
+    color: #999;
+  }
+}
+
+.stats-row {
+  display: flex;
+  justify-content: space-around;
+  background: #fff;
+  border-radius: 24px;
+  padding: 32px 16px;
+  margin-bottom: 32px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+
+  .stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .stat-num {
+    font-size: 40px;
+    font-weight: 700;
+    color: #ff7a2f;
+    margin-bottom: 8px;
+  }
+
+  .stat-label {
+    font-size: 24px;
+    color: #999;
+  }
+}
+
+.tip-card {
+  background: #fff;
+  border-radius: 24px;
+  padding: 32px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+
+  .tip-title {
+    font-size: 30px;
+    font-weight: 600;
+    color: #1a1a1a;
+    display: block;
+    margin-bottom: 16px;
+  }
+
+  .tip-text {
+    font-size: 26px;
+    color: #666;
+    line-height: 1.6;
+  }
+}

@@ -1,0 +1,85 @@
+"""FastAPI 应用入口"""
+
+from contextlib import asynccontextmanager
+
+import structlog
+from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+
+from app.api.v1.routes import health, quiz, report
+from app.core.config import get_settings
+from app.core.exceptions import (
+    ContentFilterError,
+    QuizGenerationError,
+    ReportGenerationError,
+)
+from app.models.common import ApiResponse
+
+logger = structlog.get_logger()
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    settings = get_settings()
+    logger.info("app_starting", host=settings.app_host, port=settings.app_port)
+    yield
+    logger.info("app_shutting_down")
+
+
+app = FastAPI(
+    title="鱼皮 AI 闯关学习",
+    version="0.1.0",
+    lifespan=lifespan,
+)
+
+# CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# 注册路由
+app.include_router(health.router, prefix="/api/v1")
+app.include_router(quiz.router, prefix="/api/v1")
+app.include_router(report.router, prefix="/api/v1")
+
+
+# 全局异常处理
+@app.exception_handler(ContentFilterError)
+async def content_filter_handler(request: Request, exc: ContentFilterError):
+    return JSONResponse(
+        status_code=400,
+        content=ApiResponse.error(code=4000, message=str(exc)).model_dump(),
+    )
+
+
+@app.exception_handler(QuizGenerationError)
+async def quiz_error_handler(request: Request, exc: QuizGenerationError):
+    return JSONResponse(
+        status_code=500,
+        content=ApiResponse.error(code=5001, message=str(exc)).model_dump(),
+    )
+
+
+@app.exception_handler(ReportGenerationError)
+async def report_error_handler(request: Request, exc: ReportGenerationError):
+    return JSONResponse(
+        status_code=500,
+        content=ApiResponse.error(code=5002, message=str(exc)).model_dump(),
+    )
+
+
+if __name__ == "__main__":
+    import uvicorn
+
+    settings = get_settings()
+    uvicorn.run(
+        "app.main:app",
+        host=settings.app_host,
+        port=settings.app_port,
+        reload=settings.app_debug,
+    )

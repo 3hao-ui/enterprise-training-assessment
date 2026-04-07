@@ -1,0 +1,271 @@
+/* 首页样式 - 完全匹配 UI 原型 */
+
+.index-page {
+  min-height: 100vh;
+  padding: 0 32px 180px;
+  background: linear-gradient(180deg, #fcfaf6 0%, #f5f1ea 100%);
+}
+
+.status-bar-space {
+  height: 88px;
+}
+
+/* 顶部工具栏 */
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  margin-bottom: 24px;
+  border-radius: 36px;
+  border: 2px solid #f0e2d6;
+  background: #fffdfb;
+}
+
+.hello-user {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.hello-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff0e4;
+  border: 2px solid #f1d7c0;
+  color: #cc6326;
+  font-size: 24px;
+  font-weight: 800;
+}
+
+.hello-name {
+  font-size: 28px;
+  color: #7f6347;
+  font-weight: 800;
+}
+
+.coin-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  border-radius: 999px;
+  color: #fff;
+  background: linear-gradient(90deg, #ff8a45 0%, #ff6f27 100%);
+  font-size: 26px;
+  font-weight: 800;
+}
+
+.coin-icon {
+  font-size: 28px;
+}
+
+/* 页面标题 */
+.page-title {
+  display: block;
+  font-size: 48px;
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  margin-bottom: 8px;
+}
+
+/* 输入区域 */
+.quick-input {
+  margin: 20px 0 28px;
+}
+
+.input-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.input-label {
+  display: inline-flex;
+  align-items: center;
+  min-height: 56px;
+  padding: 0 24px;
+  border-radius: 20px;
+  border: 2px solid #f0d3bc;
+  background: #fff7ef;
+  box-shadow: 0 4px 0 rgba(231, 201, 176, 0.45);
+  font-size: 26px;
+  font-weight: 800;
+  color: #8a5a37;
+}
+
+.mini-mascot {
+  width: 88px;
+  height: 88px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 28px;
+  border: 2px solid #f0d3bc;
+  background: linear-gradient(180deg, #fff8f0 0%, #ffe8d5 100%);
+  box-shadow: 0 12px 28px rgba(218, 156, 111, 0.16);
+  font-size: 48px;
+}
+
+.input-area {
+  width: 100%;
+  min-height: 144px;
+  border-radius: 32px;
+  border: 2px solid #e8d5c5;
+  background: linear-gradient(180deg, #fffefd 0%, #fff9f5 100%);
+  padding: 24px 28px;
+  font-size: 26px;
+  line-height: 1.75;
+  color: #465762;
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.7), 0 6px 20px rgba(233, 214, 197, 0.28);
+}
+
+.input-actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 24px;
+}
+
+.generate-btn {
+  width: 440px;
+}
+
+.generate-btn.is-loading {
+  opacity: 0.7;
+}
+
+.btn-arrow {
+  font-size: 32px;
+}
+
+/* 关卡卡片网格 */
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-top: 12px;
+}
+
+.quiz-card {
+  border-radius: 28px;
+  border: 2px solid var(--line);
+  background: #fffdfb;
+  min-height: 116px;
+  padding: 20px;
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.quiz-dot {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff0e4;
+  color: #cb6326;
+  border: 2px solid #f0d7c2;
+  font-size: 22px;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+.quiz-name {
+  display: block;
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.quiz-meta {
+  display: block;
+  margin-top: 8px;
+  color: #80909e;
+  font-size: 22px;
+}
+
+/* 段落标题 */
+.section-title {
+  display: block;
+  margin: 24px 0 20px;
+  font-size: 34px;
+  font-weight: 800;
+}
+
+/* 未完成关卡列表 */
+.quest-item {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 22px;
+  border-radius: 40px;
+  border: 2px solid #ede4da;
+  background: #fff;
+  margin-bottom: 20px;
+}
+
+.quest-avatar {
+  width: 112px;
+  height: 112px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #f2ddcd;
+  flex-shrink: 0;
+}
+
+.quest-info {
+  flex: 1;
+}
+
+.quest-name {
+  display: block;
+  font-size: 32px;
+  font-weight: 800;
+}
+
+.quest-desc {
+  display: block;
+  margin-top: 8px;
+  color: #8a98a5;
+  font-size: 26px;
+}
+
+/* 进度环 */
+.ring-progress {
+  flex-shrink: 0;
+}
+
+.ring-outer {
+  width: 104px;
+  height: 104px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ring-inner {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ring-text {
+  font-size: 28px;
+  font-weight: 800;
+  color: #ff7a2f;
+}
