@@ -1,12 +1,32 @@
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { View, Text, Textarea, Image } from '@tarojs/components'
-import Taro from '@tarojs/taro'
-import { generateQuiz } from '../../services/api'
+import Taro, { useDidShow } from '@tarojs/taro'
+import { generateQuiz, getCachedUser, getQuizHistory } from '../../services/api'
+import type { UserBrief, QuizHistoryItem } from '../../services/api'
 import './index.scss'
 
 export default function IndexPage() {
   const [inputValue, setInputValue] = useState('')
   const [loading, setLoading] = useState(false)
+  const [user, setUser] = useState<UserBrief | null>(null)
+  const [historyItems, setHistoryItems] = useState<QuizHistoryItem[]>([])
+
+  const loadData = useCallback(() => {
+    const cached = getCachedUser()
+    if (cached) setUser(cached)
+
+    getQuizHistory(1, 5)
+      .then((res) => setHistoryItems(res.items))
+      .catch(() => {})
+  }, [])
+
+  useEffect(() => { loadData() }, [loadData])
+
+  // 每次页面显示时刷新（从其他页面返回后）
+  useDidShow(() => {
+    const cached = getCachedUser()
+    if (cached) setUser(cached)
+  })
 
   const handleGenerate = async () => {
     const trimmed = inputValue.trim()
@@ -38,12 +58,12 @@ export default function IndexPage() {
       <View className='toolbar'>
         <View className='hello-user'>
           <View className='hello-avatar'>
-            <Text>鱼</Text>
+            <Text>{user?.nickname?.[0] || '鱼'}</Text>
           </View>
-          <Text className='hello-name'>你好，小皮</Text>
+          <Text className='hello-name'>你好，{user?.nickname || '同学'}</Text>
         </View>
         <View className='coin-badge'>
-          <Text className='coin-text'>602</Text>
+          <Text className='coin-text'>{user?.total_xp ?? 0}</Text>
           <Text className='coin-icon'>⭐</Text>
         </View>
       </View>
@@ -83,22 +103,27 @@ export default function IndexPage() {
       </View>
 
       {/* 已完成关卡 */}
-      <View className='cards-grid'>
-        <View className='quiz-card'>
-          <View className='quiz-dot'>✓</View>
-          <View className='quiz-body'>
-            <Text className='quiz-name'>RAG 基础概念</Text>
-            <Text className='quiz-meta'>关键词：检索 / 向量库 / 生成</Text>
-          </View>
+      {historyItems.length > 0 && (
+        <View className='cards-grid'>
+          {historyItems.map((item) => (
+            <View
+              key={item.quiz_id}
+              className='quiz-card'
+              onClick={() => {
+                Taro.navigateTo({
+                  url: `/pages/report/index?quizId=${item.quiz_id}`,
+                })
+              }}
+            >
+              <View className='quiz-dot'>✓</View>
+              <View className='quiz-body'>
+                <Text className='quiz-name'>{item.title}</Text>
+                <Text className='quiz-meta'>正确率：{Math.round(item.accuracy * 100)}% · {item.question_count} 题</Text>
+              </View>
+            </View>
+          ))}
         </View>
-        <View className='quiz-card'>
-          <View className='quiz-dot'>✓</View>
-          <View className='quiz-body'>
-            <Text className='quiz-name'>提示词工程</Text>
-            <Text className='quiz-meta'>关键词：角色 / 约束 / 输出格式</Text>
-          </View>
-        </View>
-      </View>
+      )}
 
       {/* 未完成关卡 */}
       <Text className='section-title'>未完成关卡</Text>

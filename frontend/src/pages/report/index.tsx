@@ -1,14 +1,15 @@
 import { useState, useEffect, useMemo } from 'react'
 import { View, Text } from '@tarojs/components'
 import Taro, { useRouter } from '@tarojs/taro'
-import { generateReport } from '../../services/api'
+import { generateReport, getQuizDetail, getCachedUser, setCachedUser } from '../../services/api'
 import type { QuizData, AnswerRecord, ReportData } from '../../services/api'
 import './index.scss'
 
 export default function ReportPage() {
   const router = useRouter()
 
-  const { quizData, answerRecords } = useMemo(() => {
+  // 路径 A：从闯关页传入完整数据
+  const fromQuiz = useMemo(() => {
     try {
       const qd = router.params.quizData
         ? JSON.parse(decodeURIComponent(router.params.quizData))
@@ -22,8 +23,14 @@ export default function ReportPage() {
     }
   }, [router.params])
 
+  // 路径 B：从历史记录进入（只有 quizId）
+  const quizIdFromHistory = router.params.quizId || ''
+
+  const [quizData, setQuizData] = useState<QuizData | null>(fromQuiz.quizData)
+  const [answerRecords, setAnswerRecords] = useState<AnswerRecord[]>(fromQuiz.answerRecords)
   const [report, setReport] = useState<ReportData | null>(null)
   const [loading, setLoading] = useState(true)
+  const [xpGain, setXpGain] = useState<number | null>(null)
 
   // 本地计算基础统计
   const localAccuracy = useMemo(() => {
@@ -33,6 +40,25 @@ export default function ReportPage() {
   }, [answerRecords])
 
   useEffect(() => {
+    // 路径 B：从历史进入，通过 API 获取所有数据
+    if (quizIdFromHistory && !fromQuiz.quizData) {
+      getQuizDetail(quizIdFromHistory)
+        .then((detail) => {
+          setQuizData({
+            quiz_id: detail.quiz_id,
+            title: detail.title,
+            summary: detail.summary,
+            questions: detail.questions as any,
+          })
+          if (detail.answer_records) setAnswerRecords(detail.answer_records)
+          if (detail.report) setReport(detail.report as any)
+        })
+        .catch(() => {})
+        .finally(() => setLoading(false))
+      return
+    }
+
+    // 路径 A：从闯关页进入，调用 AI 生成报告
     if (!quizData) {
       setLoading(false)
       return
@@ -47,8 +73,17 @@ export default function ReportPage() {
           answer_records: answerRecords,
         })
         setReport(data)
+
+        // 计算 XP 增量并刷新缓存
+        const correctCount = answerRecords.filter((r) => r.is_correct).length
+        const gained = 10 + correctCount * 2
+        setXpGain(gained)
+        const cached = getCachedUser()
+        if (cached) {
+          cached.total_xp += gained
+          setCachedUser(cached)
+        }
       } catch {
-        // AI 报告生成失败时用本地兜底
         setReport(null)
       } finally {
         setLoading(false)
@@ -56,7 +91,7 @@ export default function ReportPage() {
     }
 
     fetchReport()
-  }, [quizData, answerRecords])
+  }, [quizData, answerRecords, quizIdFromHistory, fromQuiz.quizData])
 
   const accuracy = report?.accuracy ?? localAccuracy
 
@@ -75,9 +110,11 @@ export default function ReportPage() {
       {/* 顶部栏 */}
       <View className='report-toolbar'>
         <Text className='toolbar-title'>{quizData?.title || '闯关报告'}</Text>
-        <View className='xp-badge'>
-          <Text className='xp-text'>+20 XP</Text>
-        </View>
+        {xpGain !== null && (
+          <View className='xp-badge'>
+            <Text className='xp-text'>+{xpGain} XP</Text>
+          </View>
+        )}
       </View>
 
       {/* 主标题 */}

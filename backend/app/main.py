@@ -7,9 +7,11 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from app.api.v1.routes import health, quiz, report
+from app.api.v1.routes import health, quiz, report, user
 from app.core.config import get_settings
+from app.core.db import close_mysql_pool, init_mysql
 from app.core.exceptions import (
+    AuthenticationError,
     ContentFilterError,
     QuizGenerationError,
     ReportGenerationError,
@@ -23,8 +25,12 @@ logger = structlog.get_logger()
 async def lifespan(app: FastAPI):
     settings = get_settings()
     logger.info("app_starting", host=settings.app_host, port=settings.app_port)
+    if settings.mysql_auto_init:
+        await init_mysql()
     yield
+    await close_mysql_pool()
     logger.info("app_shutting_down")
+
 
 
 app = FastAPI(
@@ -46,9 +52,18 @@ app.add_middleware(
 app.include_router(health.router, prefix="/api/v1")
 app.include_router(quiz.router, prefix="/api/v1")
 app.include_router(report.router, prefix="/api/v1")
+app.include_router(user.router, prefix="/api/v1")
 
 
 # 全局异常处理
+@app.exception_handler(AuthenticationError)
+async def auth_error_handler(request: Request, exc: AuthenticationError):
+    return JSONResponse(
+        status_code=401,
+        content=ApiResponse.error(code=4010, message=str(exc)).model_dump(),
+    )
+
+
 @app.exception_handler(ContentFilterError)
 async def content_filter_handler(request: Request, exc: ContentFilterError):
     return JSONResponse(

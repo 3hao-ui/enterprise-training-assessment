@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react'
 import { View, Text } from '@tarojs/components'
 import Taro, { useRouter } from '@tarojs/taro'
 import type { Question, AnswerRecord, QuizData } from '../../services/api'
+import { getCachedUser } from '../../services/api'
 import './index.scss'
 
 export default function QuizPage() {
@@ -140,7 +141,7 @@ export default function QuizPage() {
         <Text className='close-btn' onClick={handleClose}>×</Text>
         <Text className='question-num'>第 {currentIndex + 1} / {totalQuestions} 题</Text>
         <View className='coin-badge-small'>
-          <Text className='coin-text'>602</Text>
+          <Text className='coin-text'>{getCachedUser()?.total_xp ?? 0}</Text>
           <Text className='coin-icon'>⭐</Text>
         </View>
       </View>
