@@ -2,14 +2,12 @@
 
 .quiz-page {
   min-height: 100vh;
-  padding: 0 32px 60px;
+  padding: 16px 32px 60px;
   background:
     radial-gradient(circle at 100% 0%, rgba(255, 154, 96, 0.2), transparent 30%),
     linear-gradient(180deg, #fffdfa 0%, #fff6ef 100%);
-}
-
-.status-bar-space {
-  height: 88px;
+  box-sizing: border-box;
+  overflow-x: hidden;
 }
 
 .empty-state {
@@ -117,6 +115,8 @@
   justify-content: center;
   gap: 16px;
   padding: 20px 28px;
+  box-sizing: border-box;
+  word-break: break-all;
 }
 
 .option.selected {

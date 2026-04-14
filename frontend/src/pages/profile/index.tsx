@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react'
-import { View, Text, ScrollView } from '@tarojs/components'
+import { View, Text, Image, Button, Input } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
-import { getUserProfile, getQuizHistory } from '../../services/api'
+import { getUserProfile, getQuizHistory, updateUserProfile, setCachedUser } from '../../services/api'
 import type { UserProfile, QuizHistoryItem } from '../../services/api'
 import './index.scss'
 
@@ -11,10 +11,15 @@ export default function ProfilePage() {
   const [page, setPage] = useState(1)
   const [hasMore, setHasMore] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
+  const [editing, setEditing] = useState(false)
 
   const loadProfile = useCallback(() => {
-    getUserProfile()
-      .then((data) => setProfile(data))
+    return getUserProfile()
+      .then((data) => {
+        setProfile(data)
+        // 同步更新本地缓存，让首页等页面能读到最新信息
+        setCachedUser({ id: data.id, nickname: data.nickname, avatar_url: data.avatar_url, total_xp: data.total_xp })
+      })
       .catch(() => {})
   }, [])
 
@@ -47,19 +52,55 @@ export default function ProfilePage() {
     })
   }
 
+  // Bug 9: 微信头像授权
+  const handleChooseAvatar = (e) => {
+    const avatarUrl = e.detail.avatarUrl
+    if (avatarUrl) {
+      updateUserProfile({ avatar_url: avatarUrl })
+        .then(() => loadProfile())
+        .then(() => {})
+        .catch(() => {})
+    }
+  }
+
+  // Bug 9: 昵称编辑 — 微信 type='nickname' 选择后触发 onInput，自动提交
+  const handleNicknameInput = (e) => {
+    const name = (e?.detail?.value || '').trim()
+    if (name && name !== profile?.nickname) {
+      setEditing(false)
+      updateUserProfile({ nickname: name })
+        .then(() => loadProfile())
+        .catch(() => {})
+    }
+  }
+
   return (
     <View className='profile-page'>
-      <View className='status-bar-space' />
-      <View className='nav-bar'>
-        <Text className='nav-title'>我的</Text>
-      </View>
-
       <View className='profile-content'>
         <View className='avatar-section'>
-          <View className='avatar-placeholder'>
-            <Text className='avatar-emoji'>{profile?.nickname?.[0] || '🎓'}</Text>
-          </View>
-          <Text className='nickname'>{profile?.nickname || '学习者'}</Text>
+          {/* Bug 8 + Bug 9: 显示真实头像，支持点击授权更换 */}
+          <Button className='avatar-btn' openType='chooseAvatar' onChooseAvatar={handleChooseAvatar}>
+            {profile?.avatar_url ? (
+              <Image className='avatar-img' src={profile.avatar_url} mode='aspectFill' />
+            ) : (
+              <View className='avatar-placeholder'>
+                <Text className='avatar-emoji'>{profile?.nickname?.[0] || '🎓'}</Text>
+              </View>
+            )}
+          </Button>
+          {editing ? (
+            <Input
+              type='nickname'
+              className='nickname-input'
+              onInput={(e) => handleNicknameInput(e)}
+              focus
+              placeholder='点击获取微信昵称'
+            />
+          ) : (
+            <Text className='nickname' onClick={() => setEditing(true)}>
+              {profile?.nickname || '学习者'}
+            </Text>
+          )}
           <Text className='slogan'>每天闯关一点点，进步看得见</Text>
         </View>
 
@@ -103,7 +144,7 @@ export default function ProfilePage() {
                 <View className='history-left'>
                   <Text className='history-title'>{item.title}</Text>
                   <Text className='history-meta'>
-                    {item.question_count} 题 · 正确率 {Math.round(item.accuracy * 100)}%
+                    {item.question_count} 题 · 正确率 {Math.round(item.accuracy)}%
                   </Text>
                 </View>
                 <Text className='history-arrow'>›</Text>

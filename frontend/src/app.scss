@@ -22,6 +22,12 @@ page {
   background: var(--bg);
   font-size: 28px;
   line-height: 1.6;
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+view, text, image, button, input, textarea, scroll-view, swiper, navigator {
+  box-sizing: border-box;
 }
 
 /* 全局按钮重置 */

@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { View, Text } from '@tarojs/components'
 import Taro, { useRouter } from '@tarojs/taro'
 import type { Question, AnswerRecord, QuizData } from '../../services/api'
@@ -17,6 +17,13 @@ export default function QuizPage() {
       return null
     }
   }, [router.params.quizData])
+
+  // Bug 13: 动态设置导航栏标题
+  useEffect(() => {
+    if (quizData?.title) {
+      Taro.setNavigationBarTitle({ title: quizData.title.slice(0, 10) })
+    }
+  }, [quizData?.title])
 
   const questions = quizData?.questions || []
   const totalQuestions = questions.length
@@ -102,7 +109,6 @@ export default function QuizPage() {
   if (!quizData || !currentQuestion) {
     return (
       <View className='quiz-page'>
-        <View className='status-bar-space' />
         <View className='empty-state'>
           <Text>题目加载失败</Text>
           <View className='btn-primary' style={{ marginTop: '32px', width: '300px' }} onClick={handleClose}>
@@ -134,11 +140,8 @@ export default function QuizPage() {
 
   return (
     <View className='quiz-page'>
-      <View className='status-bar-space' />
-
       {/* 顶部栏 */}
       <View className='quiz-header'>
-        <Text className='close-btn' onClick={handleClose}>×</Text>
         <Text className='question-num'>第 {currentIndex + 1} / {totalQuestions} 题</Text>
         <View className='coin-badge-small'>
           <Text className='coin-text'>{getCachedUser()?.total_xp ?? 0}</Text>
@@ -152,7 +155,7 @@ export default function QuizPage() {
           <View className='progress-fill' style={{ width: `${progressPercent}%` }} />
         </View>
         <View className='progress-meta'>
-          <Text className='meta-text'>第 {currentIndex + 1} 关 / 共 {totalQuestions} 关</Text>
+          <Text className='meta-text'>第 {currentIndex + 1} 题 / 共 {totalQuestions} 题</Text>
           <Text className='meta-text'>答对 {correctCount} 题</Text>
         </View>
       </View>
@@ -195,7 +198,7 @@ export default function QuizPage() {
               {isCurrentCorrect ? '✓ 答对啦' : '✗ 答错了'}
             </Text>
             <Text className='result-reward'>
-              {isCurrentCorrect ? '+10 金币' : '+0 金币'}
+              {isCurrentCorrect ? '+2 经验值' : '+0 经验值'}
             </Text>
           </View>
 

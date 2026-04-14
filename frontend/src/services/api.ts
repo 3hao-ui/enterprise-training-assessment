@@ -5,6 +5,16 @@ const BASE_URL = 'http://localhost:8000/api/v1'
 const TOKEN_KEY = 'token'
 const USER_KEY = 'userInfo'
 
+/* ---- 登录就绪机制：确保页面在登录完成后再请求需要鉴权的接口 ---- */
+let _loginResolve: () => void
+const _loginReady = new Promise<void>((resolve) => { _loginResolve = resolve })
+
+/** 等待登录流程完成（无论成功或失败） */
+export function waitForLogin(): Promise<void> { return _loginReady }
+
+/** 标记登录流程已结束 */
+export function resolveLogin() { _loginResolve() }
+
 interface ApiResponse<T = any> {
   code: number
   message: string

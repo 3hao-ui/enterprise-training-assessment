@@ -2,12 +2,10 @@
 
 .report-page {
   min-height: 100vh;
-  padding: 0 32px 60px;
+  padding: 16px 32px 60px;
   background: linear-gradient(180deg, #fcfaf6 0%, #f5f1ea 100%);
-}
-
-.status-bar-space {
-  height: 88px;
+  box-sizing: border-box;
+  overflow-x: hidden;
 }
 
 /* 顶部栏 */
@@ -74,16 +72,16 @@
   border-radius: 999px;
 }
 
-.tag-orange {
-  color: #ca6329;
-  background: #fff2e7;
-  border: 2px solid #f1dcc8;
-}
-
 .tag-green {
   color: #2b8c69;
   background: #ecf8f1;
   border: 2px solid #b5dfc9;
+}
+
+.tag-red {
+  color: #c0453a;
+  background: #ffefec;
+  border: 2px solid #f5b0a9;
 }
 
 /* 加载状态 */

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { View, Text, Textarea, Image } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
-import { generateQuiz, getCachedUser, getQuizHistory } from '../../services/api'
+import { generateQuiz, getCachedUser, getQuizHistory, waitForLogin } from '../../services/api'
 import type { UserBrief, QuizHistoryItem } from '../../services/api'
 import './index.scss'
 
@@ -11,11 +11,12 @@ export default function IndexPage() {
   const [user, setUser] = useState<UserBrief | null>(null)
   const [historyItems, setHistoryItems] = useState<QuizHistoryItem[]>([])
 
-  const loadData = useCallback(() => {
+  const loadData = useCallback(async () => {
+    await waitForLogin()
     const cached = getCachedUser()
     if (cached) setUser(cached)
 
-    getQuizHistory(1, 5)
+    getQuizHistory(1, 4)
       .then((res) => setHistoryItems(res.items))
       .catch(() => {})
   }, [])
@@ -26,6 +27,10 @@ export default function IndexPage() {
   useDidShow(() => {
     const cached = getCachedUser()
     if (cached) setUser(cached)
+    // 刷新闯关历史（从报告页返回或新完成闯关后）
+    getQuizHistory(1, 4)
+      .then((res) => setHistoryItems(res.items))
+      .catch(() => {})
   })
 
   const handleGenerate = async () => {
@@ -51,15 +56,16 @@ export default function IndexPage() {
 
   return (
     <View className='index-page'>
-      {/* 状态栏占位 */}
-      <View className='status-bar-space' />
-
       {/* 顶部工具栏 */}
       <View className='toolbar'>
         <View className='hello-user'>
-          <View className='hello-avatar'>
-            <Text>{user?.nickname?.[0] || '鱼'}</Text>
-          </View>
+          {user?.avatar_url ? (
+            <Image className='hello-avatar-img' src={user.avatar_url} mode='aspectFill' />
+          ) : (
+            <View className='hello-avatar'>
+              <Text>{user?.nickname?.[0] || '鱼'}</Text>
+            </View>
+          )}
           <Text className='hello-name'>你好，{user?.nickname || '同学'}</Text>
         </View>
         <View className='coin-badge'>
@@ -118,45 +124,27 @@ export default function IndexPage() {
               <View className='quiz-dot'>✓</View>
               <View className='quiz-body'>
                 <Text className='quiz-name'>{item.title}</Text>
-                <Text className='quiz-meta'>正确率：{Math.round(item.accuracy * 100)}% · {item.question_count} 题</Text>
+                <Text className='quiz-meta'>正确率：{Math.round(item.accuracy)}% · {item.question_count} 题</Text>
               </View>
             </View>
           ))}
         </View>
       )}
 
-      {/* 未完成关卡 */}
-      <Text className='section-title'>未完成关卡</Text>
-      <View className='quest-item'>
-        <View className='quest-avatar' style={{ background: '#f0e4ff' }}>
-          <Text style={{ fontSize: '36px' }}>📐</Text>
+      {/* 学习小贴士 */}
+      <Text className='section-title'>💡 学习小贴士</Text>
+      <View className='tip-list'>
+        <View className='tip-item'>
+          <Text className='tip-icon'>🎯</Text>
+          <Text className='tip-text'>每天坚持闯关一次，知识积累看得见</Text>
         </View>
-        <View className='quest-info'>
-          <Text className='quest-name'>数学闯关</Text>
-          <Text className='quest-desc'>20 题</Text>
+        <View className='tip-item'>
+          <Text className='tip-icon'>📝</Text>
+          <Text className='tip-text'>完成闯关后查看报告，重点复习薄弱知识点</Text>
         </View>
-        <View className='ring-progress'>
-          <View className='ring-outer' style={{ background: `conic-gradient(#ff7a2f 0 60%, #ece7de 60% 100%)` }}>
-            <View className='ring-inner'>
-              <Text className='ring-text'>60%</Text>
-            </View>
-          </View>
-        </View>
-      </View>
-      <View className='quest-item'>
-        <View className='quest-avatar' style={{ background: '#e4f0ff' }}>
-          <Text style={{ fontSize: '36px' }}>🔬</Text>
-        </View>
-        <View className='quest-info'>
-          <Text className='quest-name'>科学闯关</Text>
-          <Text className='quest-desc'>20 题</Text>
-        </View>
-        <View className='ring-progress'>
-          <View className='ring-outer' style={{ background: `conic-gradient(#47a4ff 0 40%, #ece7de 40% 100%)` }}>
-            <View className='ring-inner'>
-              <Text className='ring-text' style={{ color: '#47a4ff' }}>40%</Text>
-            </View>
-          </View>
+        <View className='tip-item'>
+          <Text className='tip-icon'>⭐</Text>
+          <Text className='tip-text'>答对越多，经验值涨得越快哦</Text>
         </View>
       </View>
     </View>

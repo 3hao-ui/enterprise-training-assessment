@@ -1,9 +1,18 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { View, Text } from '@tarojs/components'
 import Taro, { useRouter } from '@tarojs/taro'
 import { generateReport, getQuizDetail, getCachedUser, setCachedUser } from '../../services/api'
 import type { QuizData, AnswerRecord, ReportData } from '../../services/api'
 import './index.scss'
+
+/** Bug 14: 根据正确率返回不同的评价话术 */
+function getHeadingByAccuracy(acc: number): string {
+  if (acc >= 100) return '🎉 满分通关，太厉害了！'
+  if (acc >= 80) return '💪 表现优秀，继续保持！'
+  if (acc >= 60) return '👍 你这局学得很稳'
+  if (acc >= 40) return '📚 有进步空间，加油！'
+  return '🌱 别灰心，下次会更好！'
+}
 
 export default function ReportPage() {
   const router = useRouter()
@@ -31,6 +40,7 @@ export default function ReportPage() {
   const [report, setReport] = useState<ReportData | null>(null)
   const [loading, setLoading] = useState(true)
   const [xpGain, setXpGain] = useState<number | null>(null)
+  const loadedRef = useRef(false)
 
   // 本地计算基础统计
   const localAccuracy = useMemo(() => {
@@ -40,6 +50,10 @@ export default function ReportPage() {
   }, [answerRecords])
 
   useEffect(() => {
+    // 防止重复加载（Bug 17 修复）
+    if (loadedRef.current) return
+    loadedRef.current = true
+
     // 路径 B：从历史进入，通过 API 获取所有数据
     if (quizIdFromHistory && !fromQuiz.quizData) {
       getQuizDetail(quizIdFromHistory)
@@ -59,7 +73,7 @@ export default function ReportPage() {
     }
 
     // 路径 A：从闯关页进入，调用 AI 生成报告
-    if (!quizData) {
+    if (!fromQuiz.quizData) {
       setLoading(false)
       return
     }
@@ -67,15 +81,15 @@ export default function ReportPage() {
     const fetchReport = async () => {
       try {
         const data = await generateReport({
-          quiz_id: quizData.quiz_id,
-          topic: quizData.title,
-          questions: quizData.questions,
-          answer_records: answerRecords,
+          quiz_id: fromQuiz.quizData!.quiz_id,
+          topic: fromQuiz.quizData!.title,
+          questions: fromQuiz.quizData!.questions,
+          answer_records: fromQuiz.answerRecords,
         })
         setReport(data)
 
         // 计算 XP 增量并刷新缓存
-        const correctCount = answerRecords.filter((r) => r.is_correct).length
+        const correctCount = fromQuiz.answerRecords.filter((r) => r.is_correct).length
         const gained = 10 + correctCount * 2
         setXpGain(gained)
         const cached = getCachedUser()
@@ -91,7 +105,8 @@ export default function ReportPage() {
     }
 
     fetchReport()
-  }, [quizData, answerRecords, quizIdFromHistory, fromQuiz.quizData])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const accuracy = report?.accuracy ?? localAccuracy
 
@@ -105,8 +120,6 @@ export default function ReportPage() {
 
   return (
     <View className='report-page'>
-      <View className='status-bar-space' />
-
       {/* 顶部栏 */}
       <View className='report-toolbar'>
         <Text className='toolbar-title'>{quizData?.title || '闯关报告'}</Text>
@@ -117,17 +130,17 @@ export default function ReportPage() {
         )}
       </View>
 
-      {/* 主标题 */}
-      <Text className='report-heading'>你这局学得很稳</Text>
+      {/* 主标题 — Bug 14: 根据正确率动态评价 */}
+      <Text className='report-heading'>{getHeadingByAccuracy(accuracy)}</Text>
       <Text className='report-subtitle'>先看结果，再看错因，最后给你下一步建议。</Text>
 
-      {/* 标签 */}
+      {/* 标签 — Bug 16: 绿色表示掌握度，红色表示错题 */}
       <View className='tag-row'>
-        <View className='tag tag-orange'>
-          <Text>⭐ 掌握度 +1</Text>
-        </View>
         <View className='tag tag-green'>
-          <Text>📊 错题 -{answerRecords.filter((r) => !r.is_correct).length}</Text>
+          <Text>✅ 答对 {answerRecords.filter((r) => r.is_correct).length} 题</Text>
+        </View>
+        <View className='tag tag-red'>
+          <Text>❌ 答错 {answerRecords.filter((r) => !r.is_correct).length} 题</Text>
         </View>
       </View>
 
