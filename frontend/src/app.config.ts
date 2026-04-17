@@ -5,6 +5,12 @@ export default defineAppConfig({
     'pages/report/index',
     'pages/profile/index',
   ],
+  networkTimeout: {
+    request: 600000,
+    connectSocket: 600000,
+    uploadFile: 600000,
+    downloadFile: 600000,
+  },
   window: {
     backgroundTextStyle: 'light',
     navigationBarBackgroundColor: '#fff',

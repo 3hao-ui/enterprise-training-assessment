@@ -52,3 +52,18 @@ class AnswerRecord(BaseModel):
     selected_answers: list[str]
     is_correct: bool
     duration_ms: int = Field(ge=0)
+
+
+# ---- 异步任务模型 ----
+
+class QuizTaskCreateResponse(BaseModel):
+    """创建出题任务的响应"""
+    task_id: str
+
+
+class QuizTaskStatusResponse(BaseModel):
+    """轮询任务状态的响应"""
+    task_id: str
+    status: Literal["pending", "running", "completed", "failed"]
+    result: "QuizGenerateResponse | None" = None
+    error_message: str | None = None

@@ -11,6 +11,10 @@ class Settings(BaseSettings):
     deepseek_base_url: str = "https://api.deepseek.com"
     deepseek_model: str = "deepseek-chat"
 
+    # Tavily (Web Search)
+    tavily_api_key: str = ""
+    enable_web_search: bool = True
+
     # App
     app_host: str = "0.0.0.0"
     app_port: int = 8000

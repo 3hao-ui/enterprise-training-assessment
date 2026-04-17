@@ -1,13 +1,14 @@
 import { useState, useEffect, useCallback } from 'react'
 import { View, Text, Textarea, Image } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
-import { generateQuiz, getCachedUser, getQuizHistory, waitForLogin } from '../../services/api'
+import { generateQuizAsync, pollQuizTask, getCachedUser, getQuizHistory, waitForLogin } from '../../services/api'
 import type { UserBrief, QuizHistoryItem } from '../../services/api'
 import './index.scss'
 
 export default function IndexPage() {
   const [inputValue, setInputValue] = useState('')
   const [loading, setLoading] = useState(false)
+  const [loadingText, setLoadingText] = useState('生成中...')
   const [user, setUser] = useState<UserBrief | null>(null)
   const [historyItems, setHistoryItems] = useState<QuizHistoryItem[]>([])
 
@@ -41,9 +42,19 @@ export default function IndexPage() {
     }
 
     setLoading(true)
+    setLoadingText('正在创建任务...')
     try {
-      const quizData = await generateQuiz(trimmed)
-      // 将题库数据传到闯关页
+      // 1. 创建异步任务（秒级返回）
+      const { task_id } = await generateQuizAsync(trimmed)
+
+      setLoadingText('AI 正在联网搜索并生成题目...')
+
+      // 2. 轮询等待任务完成
+      const quizData = await pollQuizTask(task_id, (status) => {
+        if (status === 'running') setLoadingText('AI 正在生成题目...')
+      })
+
+      // 3. 跳转闯关页
       Taro.navigateTo({
         url: `/pages/quiz/index?quizData=${encodeURIComponent(JSON.stringify(quizData))}`,
       })
@@ -51,6 +62,7 @@ export default function IndexPage() {
       Taro.showToast({ title: err.message || '生成失败，请稍后重试', icon: 'none' })
     } finally {
       setLoading(false)
+      setLoadingText('生成中...')
     }
   }
 
@@ -97,7 +109,7 @@ export default function IndexPage() {
             onClick={!loading ? handleGenerate : undefined}
           >
             {loading ? (
-              <Text>生成中...</Text>
+              <Text>{loadingText}</Text>
             ) : (
               <>
                 <Text className='btn-arrow'>→</Text>

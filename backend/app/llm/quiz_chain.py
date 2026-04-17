@@ -8,7 +8,7 @@ from langchain_core.prompts import ChatPromptTemplate
 
 from app.llm.langchain_factory import get_chat_model
 from app.models.quiz import QuizOutput
-from app.prompts.quiz_prompt import QUIZ_HUMAN_PROMPT, QUIZ_SYSTEM_PROMPT
+from app.prompts.quiz_prompt import QUIZ_HUMAN_PROMPT, QUIZ_SYSTEM_PROMPT, SEARCH_CONTEXT_TEMPLATE
 
 logger = structlog.get_logger()
 
@@ -25,8 +25,16 @@ async def generate_quiz(
     user_input: str,
     question_count: int = 5,
     difficulty: str = "mixed",
+    search_context: str = "",
 ) -> QuizOutput:
     llm = get_chat_model(temperature=0.4)
+
+    # 构建搜索上下文段落
+    search_context_section = (
+        SEARCH_CONTEXT_TEMPLATE.format(search_context=search_context)
+        if search_context
+        else ""
+    )
 
     prompt = ChatPromptTemplate.from_messages(
         [
@@ -42,6 +50,7 @@ async def generate_quiz(
             "user_input": user_input,
             "question_count": question_count,
             "difficulty": difficulty,
+            "search_context_section": search_context_section,
         }
     )
 

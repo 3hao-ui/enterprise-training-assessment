@@ -53,9 +53,10 @@ export async function request<T = any>(
   options: {
     method?: 'GET' | 'POST' | 'PUT'
     data?: any
+    timeout?: number
   } = {},
 ): Promise<T> {
-  const { method = 'GET', data } = options
+  const { method = 'GET', data, timeout = 120000 } = options
 
   const header: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -71,6 +72,7 @@ export async function request<T = any>(
     method,
     data,
     header,
+    timeout,
   })
 
   const body = res.data as ApiResponse<T>
@@ -90,7 +92,57 @@ export async function request<T = any>(
 
 /* ---- 核心业务 API ---- */
 
-/** 生成题库 */
+/** 生成题库（异步任务模式） */
+export function generateQuizAsync(userInput: string, questionCount = 5) {
+  return request<{ task_id: string }>('/quiz/generate/async', {
+    method: 'POST',
+    data: {
+      user_input: userInput,
+      question_count: questionCount,
+      difficulty: 'mixed',
+    },
+  })
+}
+
+/** 查询出题任务状态 */
+export function getQuizTaskStatus(taskId: string) {
+  return request<QuizTaskStatus>(`/quiz/task/${taskId}`)
+}
+
+/** 轮询等待出题任务完成 */
+export function pollQuizTask(
+  taskId: string,
+  onProgress?: (status: string) => void,
+  intervalMs = 8000,
+  maxAttempts = 100,
+): Promise<QuizData> {
+  return new Promise((resolve, reject) => {
+    let attempts = 0
+    const timer = setInterval(async () => {
+      attempts++
+      try {
+        const res = await getQuizTaskStatus(taskId)
+        onProgress?.(res.status)
+
+        if (res.status === 'completed' && res.result) {
+          clearInterval(timer)
+          resolve(res.result)
+        } else if (res.status === 'failed') {
+          clearInterval(timer)
+          reject(new Error(res.error_message || '题目生成失败'))
+        } else if (attempts >= maxAttempts) {
+          clearInterval(timer)
+          reject(new Error('生成超时，请稍后重试'))
+        }
+      } catch (err) {
+        clearInterval(timer)
+        reject(err)
+      }
+    }, intervalMs)
+  })
+}
+
+/** 生成题库（同步，保留兼容） */
 export function generateQuiz(userInput: string, questionCount = 5) {
   return request<QuizData>('/quiz/generate', {
     method: 'POST',
@@ -99,6 +151,7 @@ export function generateQuiz(userInput: string, questionCount = 5) {
       question_count: questionCount,
       difficulty: 'mixed',
     },
+    timeout: 600000,
   })
 }
 
@@ -112,6 +165,7 @@ export function generateReport(params: {
   return request<ReportData>('/report/generate', {
     method: 'POST',
     data: params,
+    timeout: 600000,
   })
 }
 
@@ -171,6 +225,13 @@ export interface QuizData {
   title: string
   summary: string
   questions: Question[]
+}
+
+export interface QuizTaskStatus {
+  task_id: string
+  status: 'pending' | 'running' | 'completed' | 'failed'
+  result: QuizData | null
+  error_message: string | null
 }
 
 export interface AnswerRecord {

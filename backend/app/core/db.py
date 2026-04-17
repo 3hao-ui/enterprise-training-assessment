@@ -92,6 +92,25 @@ SCHEMA_STATEMENTS: Final[list[str]] = [
             ON UPDATE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     """,
+    """
+    CREATE TABLE IF NOT EXISTS quiz_tasks (
+        id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+        task_id VARCHAR(64) NOT NULL,
+        user_id BIGINT UNSIGNED NULL,
+        status ENUM('pending', 'running', 'completed', 'failed') NOT NULL DEFAULT 'pending',
+        user_input TEXT NOT NULL,
+        question_count INT NOT NULL DEFAULT 5,
+        difficulty VARCHAR(10) NOT NULL DEFAULT 'mixed',
+        result_json JSON NULL,
+        error_message VARCHAR(500) NULL,
+        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        PRIMARY KEY (id),
+        UNIQUE KEY uk_quiz_tasks_task_id (task_id),
+        KEY idx_quiz_tasks_user_id (user_id),
+        KEY idx_quiz_tasks_status (status)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    """,
 ]
 
 

@@ -1,6 +1,6 @@
 """出题 Prompt V1"""
 
-QUIZ_SYSTEM_PROMPT = "你是一名专业的 AI 学习教练。你只能输出合法 JSON，不要输出任何 JSON 之外的内容，包括 markdown、注释、说明文字。"
+QUIZ_SYSTEM_PROMPT = "你是一名专业的 AI 学习教练。你只能输出合法 JSON，不要输出任何 JSON 之外的内容，包括 markdown、注释、说明文字。当提供了参考资料时，必须优先基于参考资料出题，确保知识的准确性和时效性。"
 
 QUIZ_HUMAN_PROMPT = """请根据用户提供的学习内容生成一组用于小程序闯关答题的题目。
 
@@ -39,5 +39,11 @@ JSON 输出结构如下（严格按此结构输出）：
   ]
 }}
 
+{search_context_section}
 用户学习内容如下：
 {user_input}"""
+
+SEARCH_CONTEXT_TEMPLATE = """以下是通过联网搜索获取的参考资料，请优先基于这些资料出题，确保知识准确性：
+
+{search_context}
+"""

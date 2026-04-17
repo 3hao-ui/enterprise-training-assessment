@@ -18,7 +18,8 @@ class TestPromptContract:
 
     def test_quiz_prompt_formattable(self):
         result = QUIZ_HUMAN_PROMPT.format(
-            user_input="test", question_count=5, difficulty="mixed"
+            user_input="test", question_count=5, difficulty="mixed",
+            search_context_section="",
         )
         assert "test" in result
         assert "5" in result
