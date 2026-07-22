@@ -127,6 +127,17 @@ export default function ProfilePage() {
           </View>
         </View>
 
+        <View
+          className='knowledge-entry'
+          onClick={() => Taro.navigateTo({ url: '/pages/knowledge/index' })}
+        >
+          <View className='knowledge-entry-left'>
+            <Text className='knowledge-entry-icon'>📚</Text>
+            <Text className='knowledge-entry-text'>我的知识库</Text>
+          </View>
+          <Text className='knowledge-entry-arrow'>›</Text>
+        </View>
+
         {/* 闯关历史 */}
         <Text className='section-title'>闯关记录</Text>
         {historyItems.length === 0 ? (

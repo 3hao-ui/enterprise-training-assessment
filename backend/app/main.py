@@ -7,12 +7,13 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from app.api.v1.routes import health, quiz, report, user
+from app.api.v1.routes import health, knowledge, quiz, report, user
 from app.core.config import get_settings
 from app.core.db import close_mysql_pool, init_mysql
 from app.core.exceptions import (
     AuthenticationError,
     ContentFilterError,
+    KnowledgeBaseError,
     QuizGenerationError,
     ReportGenerationError,
 )
@@ -53,6 +54,7 @@ app.include_router(health.router, prefix="/api/v1")
 app.include_router(quiz.router, prefix="/api/v1")
 app.include_router(report.router, prefix="/api/v1")
 app.include_router(user.router, prefix="/api/v1")
+app.include_router(knowledge.router, prefix="/api/v1")
 
 
 # 全局异常处理
@@ -85,6 +87,14 @@ async def report_error_handler(request: Request, exc: ReportGenerationError):
     return JSONResponse(
         status_code=500,
         content=ApiResponse.error(code=5002, message=str(exc)).model_dump(),
+    )
+
+
+@app.exception_handler(KnowledgeBaseError)
+async def knowledge_base_error_handler(request: Request, exc: KnowledgeBaseError):
+    return JSONResponse(
+        status_code=400,
+        content=ApiResponse.error(code=4001, message=str(exc)).model_dump(),
     )
 
 

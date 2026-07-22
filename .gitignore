@@ -21,6 +21,10 @@ __pycache__/
 venv/
 .env
 
+# Backend runtime data (uploaded files, vector store)
+backend/data/
+
+
 # Node
 node_modules/
 dist/

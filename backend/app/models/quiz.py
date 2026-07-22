@@ -38,6 +38,9 @@ class QuizGenerateRequest(BaseModel):
     difficulty: Literal["easy", "medium", "hard", "mixed"] = Field(
         default="mixed", description="难度"
     )
+    doc_id: str | None = Field(
+        default=None, description="可选，指定基于某篇知识库文档出题"
+    )
 
 
 class QuizGenerateResponse(BaseModel):

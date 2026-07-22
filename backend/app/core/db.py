@@ -111,6 +111,28 @@ SCHEMA_STATEMENTS: Final[list[str]] = [
         KEY idx_quiz_tasks_status (status)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     """,
+    """
+    CREATE TABLE IF NOT EXISTS kb_documents (
+        id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+        doc_id VARCHAR(64) NOT NULL,
+        user_id BIGINT UNSIGNED NOT NULL,
+        file_name VARCHAR(255) NOT NULL,
+        file_type VARCHAR(20) NOT NULL,
+        file_size INT NOT NULL,
+        status ENUM('processing', 'ready', 'failed') NOT NULL DEFAULT 'processing',
+        chunk_count INT NOT NULL DEFAULT 0,
+        error_message VARCHAR(500) NULL,
+        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        PRIMARY KEY (id),
+        UNIQUE KEY uk_kb_documents_doc_id (doc_id),
+        KEY idx_kb_documents_user_id (user_id),
+        CONSTRAINT fk_kb_documents_user_id
+            FOREIGN KEY (user_id) REFERENCES users (id)
+            ON DELETE CASCADE
+            ON UPDATE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    """,
 ]
 
 

@@ -51,7 +51,7 @@ export function setCachedUser(user: UserBrief) {
 export async function request<T = any>(
   url: string,
   options: {
-    method?: 'GET' | 'POST' | 'PUT'
+    method?: 'GET' | 'POST' | 'PUT' | 'DELETE'
     data?: any
     timeout?: number
   } = {},
@@ -93,13 +93,14 @@ export async function request<T = any>(
 /* ---- 核心业务 API ---- */
 
 /** 生成题库（异步任务模式） */
-export function generateQuizAsync(userInput: string, questionCount = 5) {
+export function generateQuizAsync(userInput: string, questionCount = 5, docId?: string) {
   return request<{ task_id: string }>('/quiz/generate/async', {
     method: 'POST',
     data: {
       user_input: userInput,
       question_count: questionCount,
       difficulty: 'mixed',
+      doc_id: docId,
     },
   })
 }
@@ -202,6 +203,63 @@ export function getQuizDetail(quizId: string) {
   return request<QuizDetailResponse>(`/user/quizzes/${quizId}`)
 }
 
+/* ---- 知识库 API ---- */
+
+/** 上传知识库文档（PDF/Word/Markdown/文本） */
+export function uploadKnowledgeDocument(filePath: string, fileName: string): Promise<KnowledgeUploadResponse> {
+  const token = getToken()
+  const header: Record<string, string> = {}
+  if (token) {
+    header['Authorization'] = `Bearer ${token}`
+  }
+
+  return new Promise((resolve, reject) => {
+    Taro.uploadFile({
+      url: `${BASE_URL}/knowledge/documents`,
+      filePath,
+      name: 'file',
+      fileName,
+      header,
+      timeout: 120000,
+      success: (res) => {
+        try {
+          const body = JSON.parse(res.data) as ApiResponse<KnowledgeUploadResponse>
+          if (body.code === 4010) {
+            clearToken()
+            reject(new Error('登录已过期，请重新进入小程序'))
+            return
+          }
+          if (body.code !== 0) {
+            reject(new Error(body.message || '上传失败'))
+            return
+          }
+          resolve(body.data)
+        } catch (e) {
+          reject(new Error('上传响应解析失败'))
+        }
+      },
+      fail: (err) => reject(new Error(err.errMsg || '上传失败')),
+    })
+  })
+}
+
+/** 获取知识库文档列表 */
+export function getKnowledgeDocuments() {
+  return request<KnowledgeListResponse>('/knowledge/documents')
+}
+
+/** 查询知识库文档处理状态 */
+export function getKnowledgeDocumentStatus(docId: string) {
+  return request<KnowledgeDocumentStatus>(`/knowledge/documents/${docId}`)
+}
+
+/** 删除知识库文档 */
+export function deleteKnowledgeDocument(docId: string) {
+  return request<null>(`/knowledge/documents/${docId}`, {
+    method: 'DELETE',
+  })
+}
+
 /* ---- 类型定义 ---- */
 
 export interface QuestionOption {
@@ -296,4 +354,37 @@ export interface QuizDetailResponse {
   answer_records?: AnswerRecord[]
   report?: ReportData
   created_at: string
+}
+
+/* ---- 知识库类型定义 ---- */
+
+export type KnowledgeDocumentStatusEnum = 'processing' | 'ready' | 'failed'
+
+export interface KnowledgeUploadResponse {
+  doc_id: string
+  file_name: string
+  status: KnowledgeDocumentStatusEnum
+}
+
+export interface KnowledgeDocumentItem {
+  doc_id: string
+  file_name: string
+  file_type: string
+  file_size: number
+  status: KnowledgeDocumentStatusEnum
+  chunk_count: number
+  error_message: string | null
+  created_at: string
+}
+
+export interface KnowledgeListResponse {
+  items: KnowledgeDocumentItem[]
+}
+
+export interface KnowledgeDocumentStatus {
+  doc_id: string
+  file_name: string
+  status: KnowledgeDocumentStatusEnum
+  chunk_count: number
+  error_message: string | null
 }

@@ -7,7 +7,7 @@ from typing import Optional
 import structlog
 
 from app.core.security import check_content
-from app.core.exceptions import QuizGenerationError, ContentFilterError
+from app.core.exceptions import QuizGenerationError, ContentFilterError, KnowledgeBaseError
 from app.llm.quiz_chain import generate_quiz
 from app.models.quiz import (
     QuizGenerateRequest,
@@ -17,9 +17,34 @@ from app.models.quiz import (
 )
 from app.repositories import quiz_repository
 from app.repositories import task_repository
+from app.repositories import knowledge_repository
+from app.services import rag_service
 from app.services.search_service import fetch_knowledge_context
 
 logger = structlog.get_logger()
+
+
+async def _validate_doc_id(req: QuizGenerateRequest, user_id: Optional[int]) -> None:
+    """若请求指定了 doc_id，校验用户已登录且文档存在、归属正确且已就绪"""
+    if req.doc_id is None:
+        return
+
+    if user_id is None:
+        raise KnowledgeBaseError("使用知识库出题需要先登录")
+
+    doc = await knowledge_repository.get_document(req.doc_id, user_id)
+    if doc is None:
+        raise KnowledgeBaseError("知识库文档不存在")
+
+    if doc["status"] != "ready":
+        raise KnowledgeBaseError(f"知识库文档尚未就绪（当前状态：{doc['status']}），请稍后重试")
+
+
+async def _fetch_context(req: QuizGenerateRequest, user_id: Optional[int]) -> str:
+    """根据是否指定 doc_id 选择知识库 RAG 或联网搜索获取参考资料"""
+    if req.doc_id is not None:
+        return await rag_service.fetch_rag_context(req.user_input, user_id, req.doc_id)
+    return await fetch_knowledge_context(req.user_input)
 
 
 async def handle_quiz_generate(
@@ -30,8 +55,11 @@ async def handle_quiz_generate(
     if not check_content(req.user_input):
         raise ContentFilterError("输入内容包含不当内容，请修改后重试")
 
-    # 联网搜索获取参考资料
-    search_context = await fetch_knowledge_context(req.user_input)
+    # 若指定了知识库文档，先校验其归属与状态
+    await _validate_doc_id(req, user_id)
+
+    # 获取参考资料：指定 doc_id 时走知识库 RAG，否则走联网搜索
+    search_context = await _fetch_context(req, user_id)
 
     try:
         quiz_output = await generate_quiz(
@@ -78,6 +106,9 @@ async def create_quiz_task(
     if not check_content(req.user_input):
         raise ContentFilterError("输入内容包含不当内容，请修改后重试")
 
+    # 若指定了知识库文档，先校验其归属与状态；校验失败不进入后台任务
+    await _validate_doc_id(req, user_id)
+
     task_id = f"task_{uuid.uuid4().hex[:12]}"
 
     await task_repository.create_task(
@@ -104,8 +135,8 @@ async def _run_quiz_task(
         await task_repository.update_task_status(task_id, "running")
         logger.info("quiz_task_started", task_id=task_id)
 
-        # 联网搜索获取参考资料
-        search_context = await fetch_knowledge_context(req.user_input)
+        # 获取参考资料：指定 doc_id 时走知识库 RAG，否则走联网搜索
+        search_context = await _fetch_context(req, user_id)
 
         # 生成题目
         quiz_output = await generate_quiz(

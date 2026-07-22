@@ -145,6 +145,42 @@
   margin-bottom: 20px;
 }
 
+.knowledge-entry {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #fff;
+  border-radius: 24px;
+  padding: 28px 32px;
+  margin-bottom: 32px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+
+  &:active {
+    background: #faf7f2;
+  }
+
+  .knowledge-entry-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .knowledge-entry-icon {
+    font-size: 32px;
+  }
+
+  .knowledge-entry-text {
+    font-size: 28px;
+    font-weight: 600;
+    color: #1a1a1a;
+  }
+
+  .knowledge-entry-arrow {
+    font-size: 36px;
+    color: #ccc;
+  }
+}
+
 .empty-history {
   background: #fff;
   border-radius: 24px;

@@ -15,6 +15,20 @@ class Settings(BaseSettings):
     tavily_api_key: str = ""
     enable_web_search: bool = True
 
+    # DashScope (百炼 Embedding，用于知识库 RAG)
+    dashscope_api_key: str = ""
+    dashscope_embedding_model: str = "text-embedding-v4"
+    dashscope_base_url: str = "https://dashscope.aliyuncs.com/compatible-mode/v1"
+
+    # 知识库 / 向量存储
+    chroma_persist_dir: str = "./data/chroma"
+    kb_upload_dir: str = "./data/uploads"
+    kb_max_documents_per_user: int = 10
+    kb_max_file_size_mb: int = 10
+    kb_chunk_size: int = 1000
+    kb_chunk_overlap: int = 150
+    kb_retrieve_top_k: int = 4
+
     # App
     app_host: str = "0.0.0.0"
     app_port: int = 8000

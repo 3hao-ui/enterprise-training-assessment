@@ -31,3 +31,12 @@ class AuthenticationError(Exception):
     def __init__(self, message: str = "未登录或登录已过期"):
         self.message = message
         super().__init__(self.message)
+
+
+class KnowledgeBaseError(Exception):
+    """知识库操作异常（格式/大小/数量校验失败、文档不存在或未就绪等）"""
+
+    def __init__(self, message: str = "知识库操作失败"):
+        self.message = message
+        super().__init__(self.message)
+

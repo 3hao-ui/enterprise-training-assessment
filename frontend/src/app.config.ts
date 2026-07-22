@@ -4,6 +4,7 @@ export default defineAppConfig({
     'pages/quiz/index',
     'pages/report/index',
     'pages/profile/index',
+    'pages/knowledge/index',
   ],
   networkTimeout: {
     request: 600000,
