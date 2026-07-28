@@ -18,6 +18,7 @@ class Question(BaseModel):
     explanation: str = Field(description="详细讲解")
     knowledge_point: str = Field(description="知识点标签")
     difficulty: Literal["easy", "medium", "hard"] = Field(description="难度")
+    image_url: str | None = Field(default=None, description="AI 生成的题目配图 URL（可选）")
 
 
 class QuizOutput(BaseModel):
@@ -41,6 +42,9 @@ class QuizGenerateRequest(BaseModel):
     doc_id: str | None = Field(
         default=None, description="可选，指定基于某篇知识库文档出题"
     )
+    generate_images: bool = Field(
+        default=False, description="是否为每道题目生成配图"
+    )
 
 
 class QuizGenerateResponse(BaseModel):
@@ -48,6 +52,9 @@ class QuizGenerateResponse(BaseModel):
     title: str
     summary: str
     questions: list[Question]
+    image_notice: str | None = Field(
+        default=None, description="配图相关的提示信息（如未登录/额度已用完/部分题目未配图等），无异常时为 None"
+    )
 
 
 class AnswerRecord(BaseModel):

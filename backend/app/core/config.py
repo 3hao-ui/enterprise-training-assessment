@@ -29,6 +29,27 @@ class Settings(BaseSettings):
     kb_chunk_overlap: int = 150
     kb_retrieve_top_k: int = 4
 
+    # 题目配图（DashScope 千问-文生图 qwen-image）
+    dashscope_image_model: str = "qwen-image-2.0"
+    # 生图专用 API Key（留空时回退使用 dashscope_api_key）。
+    # 注意：部分 sk-ws- 开头的工作空间 Key 按用途限定权限范围，Embedding 与生图可能需要各自的 Key。
+    dashscope_image_api_key: str = ""
+    # 图像生成使用的原生 DashScope API 地址（与 OpenAI 兼容模式的 dashscope_base_url 不同）
+    # 留空时会自动从 dashscope_base_url 派生（将 /compatible-mode/v1 替换为 /api/v1）
+    dashscope_image_base_url: str = ""
+    image_gen_size: str = "512*512"
+    image_gen_daily_limit: int = 20
+    image_gen_max_concurrency: int = 5
+
+    # 腾讯云 COS（用于持久化存储 AI 生成的题目配图）
+    cos_secret_id: str = ""
+    cos_secret_key: str = ""
+    cos_region: str = ""
+    cos_bucket: str = ""
+    cos_upload_prefix: str = "quiz-images/"
+    # 可选：自定义访问域名（如 CDN 加速域名），留空则使用 COS 默认域名
+    cos_domain: str = ""
+
     # App
     app_host: str = "0.0.0.0"
     app_port: int = 8000

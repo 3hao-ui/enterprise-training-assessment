@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react'
-import { View, Text } from '@tarojs/components'
+import { View, Text, Image } from '@tarojs/components'
 import Taro, { useRouter } from '@tarojs/taro'
 import type { Question, AnswerRecord, QuizData } from '../../services/api'
 import { getCachedUser } from '../../services/api'
@@ -162,6 +162,17 @@ export default function QuizPage() {
 
       {/* 题干 */}
       <Text className='quiz-title'>{currentQuestion.stem}</Text>
+
+      {/* 题目配图（若 AI 生成了） */}
+      {currentQuestion.image_url && (
+        <View className='question-image-wrap'>
+          <Image
+            className='question-image'
+            src={currentQuestion.image_url}
+            mode='aspectFit'
+          />
+        </View>
+      )}
 
       {/* 选项列表 */}
       <View className='options-list'>

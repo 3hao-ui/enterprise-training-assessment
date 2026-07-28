@@ -12,6 +12,7 @@ from app.llm.quiz_chain import generate_quiz
 from app.models.quiz import (
     QuizGenerateRequest,
     QuizGenerateResponse,
+    QuizOutput,
     QuizTaskCreateResponse,
     QuizTaskStatusResponse,
 )
@@ -19,9 +20,36 @@ from app.repositories import quiz_repository
 from app.repositories import task_repository
 from app.repositories import knowledge_repository
 from app.services import rag_service
+from app.services import image_service
 from app.services.search_service import fetch_knowledge_context
 
 logger = structlog.get_logger()
+
+
+async def _maybe_generate_images(
+    quiz_output: QuizOutput,
+    quiz_id: str,
+    user_id: Optional[int],
+    generate_images: bool,
+) -> Optional[str]:
+    """若请求开启了配图，尝试为题目生成配图并写回 question.image_url。
+
+    生图失败绝不影响出题主流程：任何异常都会被捕获并记录日志，题目正常返回（不带图片）。
+    """
+    if not generate_images:
+        return None
+
+    try:
+        image_map, notice = await image_service.generate_images_for_quiz(
+            quiz_output.questions, user_id, quiz_id
+        )
+        for q in quiz_output.questions:
+            if q.id in image_map:
+                q.image_url = image_map[q.id]
+        return notice
+    except Exception as e:
+        logger.error("quiz_image_generation_failed", quiz_id=quiz_id, error=str(e))
+        return None
 
 
 async def _validate_doc_id(req: QuizGenerateRequest, user_id: Optional[int]) -> None:
@@ -74,6 +102,9 @@ async def handle_quiz_generate(
 
     quiz_id = f"quiz_{uuid.uuid4().hex[:12]}"
 
+    # 按需为题目生成配图（不影响出题主流程）
+    image_notice = await _maybe_generate_images(quiz_output, quiz_id, user_id, req.generate_images)
+
     # 有登录态时落库
     if user_id is not None:
         try:
@@ -93,6 +124,7 @@ async def handle_quiz_generate(
         title=quiz_output.title,
         summary=quiz_output.summary,
         questions=quiz_output.questions,
+        image_notice=image_notice,
     )
 
 
@@ -148,6 +180,9 @@ async def _run_quiz_task(
 
         quiz_id = f"quiz_{uuid.uuid4().hex[:12]}"
 
+        # 按需为题目生成配图（不影响出题主流程）
+        image_notice = await _maybe_generate_images(quiz_output, quiz_id, user_id, req.generate_images)
+
         # 有登录态时落库
         if user_id is not None:
             try:
@@ -167,6 +202,7 @@ async def _run_quiz_task(
             title=quiz_output.title,
             summary=quiz_output.summary,
             questions=quiz_output.questions,
+            image_notice=image_notice,
         )
 
         await task_repository.update_task_status(

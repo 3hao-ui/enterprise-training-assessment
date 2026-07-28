@@ -93,7 +93,12 @@ export async function request<T = any>(
 /* ---- 核心业务 API ---- */
 
 /** 生成题库（异步任务模式） */
-export function generateQuizAsync(userInput: string, questionCount = 5, docId?: string) {
+export function generateQuizAsync(
+  userInput: string,
+  questionCount = 5,
+  docId?: string,
+  generateImages = false,
+) {
   return request<{ task_id: string }>('/quiz/generate/async', {
     method: 'POST',
     data: {
@@ -101,6 +106,7 @@ export function generateQuizAsync(userInput: string, questionCount = 5, docId?: 
       question_count: questionCount,
       difficulty: 'mixed',
       doc_id: docId,
+      generate_images: generateImages,
     },
   })
 }
@@ -144,13 +150,14 @@ export function pollQuizTask(
 }
 
 /** 生成题库（同步，保留兼容） */
-export function generateQuiz(userInput: string, questionCount = 5) {
+export function generateQuiz(userInput: string, questionCount = 5, generateImages = false) {
   return request<QuizData>('/quiz/generate', {
     method: 'POST',
     data: {
       user_input: userInput,
       question_count: questionCount,
       difficulty: 'mixed',
+      generate_images: generateImages,
     },
     timeout: 600000,
   })
@@ -276,6 +283,7 @@ export interface Question {
   explanation: string
   knowledge_point: string
   difficulty: 'easy' | 'medium' | 'hard'
+  image_url?: string | null
 }
 
 export interface QuizData {
@@ -283,6 +291,7 @@ export interface QuizData {
   title: string
   summary: string
   questions: Question[]
+  image_notice?: string | null
 }
 
 export interface QuizTaskStatus {

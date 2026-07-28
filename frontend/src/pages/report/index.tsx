@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
-import { View, Text } from '@tarojs/components'
+import { View, Text, Image } from '@tarojs/components'
 import Taro, { useRouter } from '@tarojs/taro'
 import { generateReport, getQuizDetail, getCachedUser, setCachedUser } from '../../services/api'
 import type { QuizData, AnswerRecord, ReportData } from '../../services/api'
@@ -230,6 +230,34 @@ export default function ReportPage() {
               <View className='poster-qr' />
             </View>
           </View>
+
+          {/* 题目回顾（含 AI 配图，历史回看时也可查看） */}
+          {quizData?.questions && quizData.questions.length > 0 && (
+            <View className='note-card'>
+              <Text className='card-title'>📖 题目回顾</Text>
+              <View className='review-list'>
+                {quizData.questions.map((q, i) => {
+                  const record = answerRecords.find((r) => r.question_id === q.id)
+                  return (
+                    <View key={q.id} className='review-item'>
+                      <Text className='review-stem'>
+                        {i + 1}. {q.stem}
+                      </Text>
+                      {q.image_url && (
+                        <Image className='review-image' src={q.image_url} mode='aspectFit' />
+                      )}
+                      {record && (
+                        <Text className={`review-result ${record.is_correct ? 'is-correct' : 'is-wrong'}`}>
+                          {record.is_correct ? '✓ 答对了' : '✗ 答错了'}
+                        </Text>
+                      )}
+                      <Text className='review-explanation'>{q.explanation}</Text>
+                    </View>
+                  )
+                })}
+              </View>
+            </View>
+          )}
         </>
       )}
 

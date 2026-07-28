@@ -9,6 +9,7 @@ export default function IndexPage() {
   const [inputValue, setInputValue] = useState('')
   const [loading, setLoading] = useState(false)
   const [loadingText, setLoadingText] = useState('生成中...')
+  const [generateImages, setGenerateImages] = useState(false)
   const [user, setUser] = useState<UserBrief | null>(null)
   const [historyItems, setHistoryItems] = useState<QuizHistoryItem[]>([])
 
@@ -45,7 +46,7 @@ export default function IndexPage() {
     setLoadingText('正在创建任务...')
     try {
       // 1. 创建异步任务（秒级返回）
-      const { task_id } = await generateQuizAsync(trimmed)
+      const { task_id } = await generateQuizAsync(trimmed, 5, undefined, generateImages)
 
       setLoadingText('AI 正在联网搜索并生成题目...')
 
@@ -53,6 +54,11 @@ export default function IndexPage() {
       const quizData = await pollQuizTask(task_id, (status) => {
         if (status === 'running') setLoadingText('AI 正在生成题目...')
       })
+
+      // 若配图有提示（如未登录/额度不足），友好告知，不阻断闯关
+      if (quizData.image_notice) {
+        Taro.showToast({ title: quizData.image_notice, icon: 'none', duration: 3000 })
+      }
 
       // 3. 跳转闯关页
       Taro.navigateTo({
@@ -103,6 +109,18 @@ export default function IndexPage() {
           maxlength={500}
           autoHeight
         />
+        <View
+          className={`image-toggle-row ${generateImages ? 'is-active' : ''}`}
+          onClick={() => setGenerateImages((prev) => !prev)}
+        >
+          <View className='image-toggle-info'>
+            <Text className='image-toggle-icon'>🖼️</Text>
+            <Text className='image-toggle-label'>为题目生成配图</Text>
+          </View>
+          <View className={`toggle-pill ${generateImages ? 'is-on' : ''}`}>
+            <View className='toggle-knob' />
+          </View>
+        </View>
         <View className='input-actions'>
           <View
             className={`btn-primary generate-btn ${loading ? 'is-loading' : ''}`}
