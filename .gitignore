@@ -24,6 +24,9 @@ venv/
 # Backend runtime data (uploaded files, vector store)
 backend/data/
 
+# 微信云托管环境变量导入文件（含真实密钥，切勿提交）
+wxcloudrun*.env.json
+
 
 # Node
 node_modules/

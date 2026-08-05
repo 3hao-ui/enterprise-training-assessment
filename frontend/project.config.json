@@ -2,7 +2,7 @@
   "miniprogramRoot": "dist/",
   "projectname": "frontend",
   "description": "鱼皮AI闯关学习小程序",
-  "appid": "wx370d9458c983e21d",
+  "appid": "wxe75e6433459ffc7a",
   "setting": {
     "urlCheck": true,
     "es6": false,

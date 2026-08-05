@@ -22,20 +22,32 @@ async def wx_code_to_openid(code: str) -> str:
     if not settings.wechat_app_id or not settings.wechat_app_secret:
         raise AuthenticationError("微信登录未配置")
 
-    async with httpx.AsyncClient(timeout=10) as client:
-        resp = await client.get(
-            WX_CODE2SESSION_URL,
-            params={
-                "appid": settings.wechat_app_id,
-                "secret": settings.wechat_app_secret,
-                "js_code": code,
-                "grant_type": "authorization_code",
-            },
-        )
-        data = resp.json()
+    try:
+        async with httpx.AsyncClient(timeout=10) as client:
+            resp = await client.get(
+                WX_CODE2SESSION_URL,
+                params={
+                    "appid": settings.wechat_app_id,
+                    "secret": settings.wechat_app_secret,
+                    "js_code": code,
+                    "grant_type": "authorization_code",
+                },
+            )
+            data = resp.json()
+    except httpx.HTTPError as exc:
+        logger.error("wx_login_request_failed", error=str(exc), exc_info=True)
+        raise AuthenticationError("微信登录服务暂时不可用，请稍后重试") from exc
+    except ValueError as exc:  # resp.json() 解析失败
+        logger.error("wx_login_invalid_response", error=str(exc), exc_info=True)
+        raise AuthenticationError("微信登录失败，请重试") from exc
 
     if "openid" not in data:
-        logger.error("wx_login_failed", errcode=data.get("errcode"), errmsg=data.get("errmsg"))
+        logger.error(
+            "wx_login_failed",
+            errcode=data.get("errcode"),
+            errmsg=data.get("errmsg"),
+            appid=settings.wechat_app_id,
+        )
         raise AuthenticationError("微信登录失败，请重试")
 
     return data["openid"]

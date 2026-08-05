@@ -98,6 +98,22 @@ async def knowledge_base_error_handler(request: Request, exc: KnowledgeBaseError
     )
 
 
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request: Request, exc: Exception):
+    """兜底异常处理：避免直接暴露裸的 "Internal Server Error"，并记录完整堆栈便于排查。"""
+    logger.error(
+        "unhandled_exception",
+        path=request.url.path,
+        method=request.method,
+        error=str(exc),
+        exc_info=True,
+    )
+    return JSONResponse(
+        status_code=500,
+        content=ApiResponse.error(code=5000, message="服务器内部错误，请稍后重试").model_dump(),
+    )
+
+
 if __name__ == "__main__":
     import uvicorn
 

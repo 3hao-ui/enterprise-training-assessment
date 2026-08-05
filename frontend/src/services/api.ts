@@ -1,6 +1,9 @@
 import Taro from '@tarojs/taro'
 
-const BASE_URL = 'http://localhost:8000/api/v1'
+// 由 frontend/config/dev.ts、frontend/config/prod.ts 中的 defineConstants 按环境注入
+declare const API_BASE_URL: string
+
+const BASE_URL = API_BASE_URL
 
 const TOKEN_KEY = 'token'
 const USER_KEY = 'userInfo'
