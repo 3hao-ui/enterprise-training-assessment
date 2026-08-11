@@ -10,7 +10,7 @@
 
 ## 一、项目介绍
 
-这是一套以 **AI 编程实战** 为核心的项目教程，基于 Taro + Python FastAPI + LangChain + DeepSeek，用 AI 编程的方式从 0 到 1 开发一个《AI 闯关学习微信小程序》，并且走完部署上线的全流程，带你亲身体验 AI Vibe Coding 的完整工作流，学会用 AI 做出一个能上线、能传播、能变现的小程序产品！
+这是一套以 **AI 编程实战** 为核心的项目教程，基于 Taro + Python FastAPI + LangChain + LangGraph + DeepSeek，用 AI 编程的方式从 0 到 1 开发一个《AI 闯关学习微信小程序》，并且走完部署上线的全流程，带你亲身体验 AI Vibe Coding 的完整工作流，学会用 AI 做出一个能上线、能传播、能变现的小程序产品！
 
 ![](https://pic.yupi.icu/1/1-project-demo-overview.png)
 
@@ -36,7 +36,7 @@
 
 1）一句话起题，AI 自动联网搜索并生成闯关题目。
 
-大模型的知识有截止日期，所以项目给出题环节接入了 Tavily 联网搜索，做成了一个会自己决定搜什么、搜几轮的 ReAct Agent，保证题目不过时。
+大模型的知识有截止日期，所以项目给出题环节接入了 Tavily 联网搜索，用 LangGraph 做成了一个会自己决定搜什么、搜几轮的 ReAct Agent，保证题目不过时。
 
 ![](https://pic.yupi.icu/1/3-vibecoding-web-search-and-correct-answer.png)
 
@@ -115,10 +115,11 @@
 - 如何让多个 AI 工具「赛马」产出 UI 原型，做出精美界面？
 - 如何用 AI 从 0 开发一个微信小程序，包括跨端框架选型、脚手架初始化、页面开发？
 - 如何用 LangChain 编排大模型，让 AI 稳定输出结构化的 JSON 题目数据？
-- 如何给 AI 接入联网搜索，把一次大模型调用升级成会自主查资料的 AI Agent？
+- 如何用 LangGraph 构建 ReAct 智能体，把一次大模型调用升级成会自主联网查资料的 AI Agent？
 - 如何从零实现一套 RAG 知识库，包括文档解析、分块、向量化、检索增强出题？
 - 如何接入 AI 生图并结合对象存储，把临时图片链接转成永久可用的资源？
 - 如何用 OpenSpec 做规范驱动开发，让 AI 在长周期项目里稳定产出？
+- 什么是 Harness Engineering？如何用需求文档、方案设计、UI 原型、MCP、Skills 和 Git 给 AI 搭好脚手架？
 - 如何把项目 Docker 容器化部署，并走完一整套小程序发布流程？
 
 
@@ -149,7 +150,7 @@
 
 ![](https://pic.yupi.icu/1/image-20260811155000927.png)
 
-本项目以 Taro 微信小程序 + Python FastAPI + LangChain 为核心，前后端分离，综合运用了多种主流的小程序开发和 AI 应用开发技术。
+本项目以 Taro 微信小程序 + Python FastAPI + LangChain / LangGraph 为核心，前后端分离，综合运用了多种主流的小程序开发和 AI 应用开发技术。
 
 ![](https://pic.yupi.icu/1/image-20260811155136853.png)
 
@@ -169,6 +170,7 @@
 | 测试 | pytest · pytest-asyncio |
 | 部署 | Docker · 微信云托管 · 云数据库 MySQL |
 | AI 编程工具 | GitHub Copilot · Claude Code · OpenSpec · MCP · Agent Skills |
+| AI 编程方法 | Harness Engineering · 规范驱动开发（SDD）· 原型赛马 · 上下文管理 |
 
 
 
