@@ -22,7 +22,14 @@ export default defineConfig<'webpack5'>(async (merge) => {
       options: {},
     },
     framework: 'react',
-    compiler: 'webpack5',
+    // prebundle 关闭：Taro 4 的依赖预编译与 npm12 解析出的 enhanced-resolve/
+    // webpack-virtual-modules 版本不兼容，会在启动 dev server 时抛 TypeError 崩溃
+    compiler: {
+      type: 'webpack5',
+      prebundle: {
+        enable: false,
+      },
+    },
     cache: {
       enable: false,
     },
