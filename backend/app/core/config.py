@@ -1,4 +1,4 @@
-"""鱼皮AI闯关学习小程序 - 后端配置"""
+"""企业内部培训智能考核系统 - 后端配置"""
 
 from functools import lru_cache
 

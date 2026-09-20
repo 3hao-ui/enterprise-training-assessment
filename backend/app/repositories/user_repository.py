@@ -51,7 +51,7 @@ async def create_user(openid: str) -> dict:
             return {
                 "id": user_id,
                 "openid": openid,
-                "nickname": "学习者",
+                "nickname": "员工",
                 "avatar_url": "",
                 "total_xp": 0,
             }

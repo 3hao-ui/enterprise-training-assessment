@@ -120,7 +120,7 @@ async def get_user_answer_stats(user_id: int) -> dict:
 
 
 async def get_user_quiz_list(user_id: int, page: int, page_size: int) -> tuple[list[dict], int]:
-    """分页获取用户闯关历史。返回 (items, total)。"""
+    """分页获取用户考核历史。返回 (items, total)。"""
     pool = get_mysql_pool()
     if pool is None:
         return [], 0
@@ -161,7 +161,7 @@ async def get_user_quiz_list(user_id: int, page: int, page_size: int) -> tuple[l
 
 
 async def get_quiz_detail(quiz_id: str, user_id: int) -> Optional[dict]:
-    """获取单次闯关完整详情。"""
+    """获取单次考核完整详情。"""
     pool = get_mysql_pool()
     if pool is None:
         return None

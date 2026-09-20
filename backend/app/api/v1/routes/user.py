@@ -48,5 +48,5 @@ async def get_quiz_detail(
 ):
     result = await history_service.get_quiz_detail(quiz_id, user_id)
     if result is None:
-        return ApiResponse.error(code=4004, message="闯关记录不存在")
+        return ApiResponse.error(code=4004, message="考核记录不存在")
     return ApiResponse.success(data=result.model_dump())

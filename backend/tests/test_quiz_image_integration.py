@@ -11,7 +11,7 @@ from app.services import quiz_service
 @pytest.fixture
 def mock_quiz_output():
     return QuizOutput(
-        title="英语单词闯关",
+        title="英语单词考核",
         summary="水果类单词",
         questions=[
             Question(
@@ -136,5 +136,5 @@ class TestQuizGenerateWithImages:
             req = QuizGenerateRequest(user_input="学习水果单词", question_count=3, generate_images=True)
             result = await quiz_service.handle_quiz_generate(req, user_id=1)
 
-        assert result.title == "英语单词闯关"
+        assert result.title == "英语单词考核"
         assert all(q.image_url is None for q in result.questions)

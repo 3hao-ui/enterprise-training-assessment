@@ -16,7 +16,7 @@ def sample_quiz_request():
 def sample_quiz_response_data():
     return {
         "quiz_id": "quiz_abc123",
-        "title": "RAG 入门闯关",
+        "title": "RAG 入门考核",
         "summary": "围绕 RAG 基础概念与应用场景生成的题库",
         "questions": [
             {

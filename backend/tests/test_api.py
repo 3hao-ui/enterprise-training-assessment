@@ -13,7 +13,7 @@ from app.models.report import ReportOutput
 @pytest.fixture
 def mock_quiz_output():
     return QuizOutput(
-        title="Python 基础闯关",
+        title="Python 基础考核",
         summary="围绕 Python 基础语法生成的题库",
         questions=[
             Question(

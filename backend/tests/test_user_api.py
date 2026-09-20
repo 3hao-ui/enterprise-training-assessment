@@ -23,7 +23,7 @@ class TestLoginAPI:
         mock_user = {
             "id": 1,
             "openid": "mock_openid",
-            "nickname": "学习者",
+            "nickname": "员工",
             "avatar_url": "",
             "total_xp": 0,
         }
@@ -51,14 +51,14 @@ class TestLoginAPI:
             body = resp.json()
             assert body["code"] == 0
             assert "token" in body["data"]
-            assert body["data"]["user"]["nickname"] == "学习者"
+            assert body["data"]["user"]["nickname"] == "员工"
 
     async def test_login_existing_user(self):
         """已注册用户登录"""
         mock_user = {
             "id": 5,
             "openid": "existing_openid",
-            "nickname": "鱼皮同学",
+            "nickname": "张三",
             "avatar_url": "https://example.com/avatar.png",
             "total_xp": 100,
         }
@@ -152,7 +152,7 @@ class TestQuizHistoryAPI:
         mock_items = [
             {
                 "quiz_id": "quiz_abc123",
-                "title": "RAG 入门闯关",
+                "title": "RAG 入门考核",
                 "accuracy": 80.0,
                 "question_count": 5,
                 "created_at": "2026-04-08 10:00:00",

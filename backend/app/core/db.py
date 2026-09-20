@@ -23,7 +23,7 @@ SCHEMA_STATEMENTS: Final[list[str]] = [
         role VARCHAR(16) NOT NULL DEFAULT 'employee',
         department VARCHAR(64) NOT NULL DEFAULT '',
         status TINYINT NOT NULL DEFAULT 1,
-        nickname VARCHAR(100) NOT NULL DEFAULT '学习者',
+        nickname VARCHAR(100) NOT NULL DEFAULT '员工',
         avatar_url VARCHAR(500) NOT NULL DEFAULT '',
         total_xp INT NOT NULL DEFAULT 0,
         created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -233,6 +233,20 @@ async def _migrate_users_table(cursor) -> None:
         await cursor.execute(
             "ALTER TABLE users ADD UNIQUE KEY uk_users_username (username)"
         )
+
+    # 建表语句是 CREATE TABLE IF NOT EXISTS，老库的列默认值不会被它改动，
+    # 所以品牌统一后需显式 ALTER 默认值并回填存量行
+    await cursor.execute(
+        "SELECT COLUMN_DEFAULT FROM information_schema.COLUMNS "
+        "WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'users' "
+        "AND COLUMN_NAME = 'nickname'"
+    )
+    (default_nickname,) = await cursor.fetchone()
+    if default_nickname != "员工":
+        await cursor.execute(
+            "ALTER TABLE users MODIFY nickname VARCHAR(100) NOT NULL DEFAULT '员工'"
+        )
+    await cursor.execute("UPDATE users SET nickname = '员工' WHERE nickname = '学习者'")
 
 
 async def init_mysql() -> None:

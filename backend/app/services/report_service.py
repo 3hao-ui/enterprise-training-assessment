@@ -48,7 +48,7 @@ async def handle_report_generate(
                 user_id=user_id,
                 report_json=report_output.model_dump(),
             )
-            # 累加经验值：完成闯关 +10，每答对一题 +2
+            # 累加考核积分：完成考核 +10，每答对一题 +2
             xp_gain = 10 + score_summary["correct"] * 2
             await user_repository.add_user_xp(user_id, xp_gain)
         except Exception as e:

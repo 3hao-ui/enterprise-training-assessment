@@ -43,7 +43,7 @@ def _derive_image_base_url(dashscope_base_url: str) -> str:
 def build_image_prompt(question: Question) -> str:
     """根据题目内容构建生图 Prompt。"""
     return (
-        f"为一道学习闯关题目生成配图。知识点：{question.knowledge_point}。"
+        f"为一道企业培训考核题目生成配图。知识点：{question.knowledge_point}。"
         f"题目内容：{question.stem}。\n"
         "要求：画面聚焦题目描述的核心主体（如具体的单词实物、动植物、历史场景、地理风貌等），"
         "根据内容自行选择最合适的写实摄影或扁平插画风格，构图简洁、主体突出、色彩明快，"
