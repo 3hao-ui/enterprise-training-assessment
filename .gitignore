@@ -37,3 +37,6 @@ build/
 # WeChat
 project.private.config.json
 temp_debug.png
+
+# 求职材料：只本地保留，不入库
+docs/面试讲解要点.md
