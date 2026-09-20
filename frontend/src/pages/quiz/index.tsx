@@ -82,7 +82,7 @@ export default function QuizPage() {
       setSubmitted(false)
       setStartTime(Date.now())
     } else {
-      // 所有题目完成，跳转报告页
+      // 所有题目完成，跳转复盘页
       Taro.navigateTo({
         url: `/pages/report/index?quizData=${encodeURIComponent(JSON.stringify(quizData))}&answerRecords=${encodeURIComponent(JSON.stringify(answerRecords))}`,
       })
@@ -206,10 +206,10 @@ export default function QuizPage() {
           {/* 结果提示 */}
           <View className={`result-tip ${isCurrentCorrect ? 'is-correct' : 'is-wrong'}`}>
             <Text className='result-label'>
-              {isCurrentCorrect ? '✓ 答对啦' : '✗ 答错了'}
+              {isCurrentCorrect ? '✓ 回答正确' : '✗ 回答错误'}
             </Text>
             <Text className='result-reward'>
-              {isCurrentCorrect ? '+2 经验值' : '+0 经验值'}
+              {isCurrentCorrect ? '+2 积分' : '+0 积分'}
             </Text>
           </View>
 
@@ -228,7 +228,7 @@ export default function QuizPage() {
             )}
             <View className='next-btn' onClick={handleNext}>
               <Text>
-                {currentIndex < totalQuestions - 1 ? '继续 →' : '查看报告 →'}
+                {currentIndex < totalQuestions - 1 ? '下一题 →' : '查看复盘 →'}
               </Text>
             </View>
           </View>

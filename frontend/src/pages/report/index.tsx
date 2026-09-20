@@ -7,17 +7,17 @@ import './index.scss'
 
 /** Bug 14: 根据正确率返回不同的评价话术 */
 function getHeadingByAccuracy(acc: number): string {
-  if (acc >= 100) return '🎉 满分通关，太厉害了！'
+  if (acc >= 100) return '🎉 满分通过，全部掌握！'
   if (acc >= 80) return '💪 表现优秀，继续保持！'
-  if (acc >= 60) return '👍 你这局学得很稳'
+  if (acc >= 60) return '👍 整体掌握稳定'
   if (acc >= 40) return '📚 有进步空间，加油！'
-  return '🌱 别灰心，下次会更好！'
+  return '🌱 未达要求，请参加补考'
 }
 
 export default function ReportPage() {
   const router = useRouter()
 
-  // 路径 A：从闯关页传入完整数据
+  // 路径 A：从答题页传入完整数据
   const fromQuiz = useMemo(() => {
     try {
       const qd = router.params.quizData
@@ -72,7 +72,7 @@ export default function ReportPage() {
       return
     }
 
-    // 路径 A：从闯关页进入，调用 AI 生成报告
+    // 路径 A：从答题页进入，调用 AI 生成报告
     if (!fromQuiz.quizData) {
       setLoading(false)
       return
@@ -122,10 +122,10 @@ export default function ReportPage() {
     <View className='report-page'>
       {/* 顶部栏 */}
       <View className='report-toolbar'>
-        <Text className='toolbar-title'>{quizData?.title || '闯关报告'}</Text>
+        <Text className='toolbar-title'>{quizData?.title || '考核复盘报告'}</Text>
         {xpGain !== null && (
           <View className='xp-badge'>
-            <Text className='xp-text'>+{xpGain} XP</Text>
+            <Text className='xp-text'>+{xpGain} 积分</Text>
           </View>
         )}
       </View>
@@ -181,7 +181,7 @@ export default function ReportPage() {
           {/* 薄弱知识点 */}
           {report?.weak_points && report.weak_points.length > 0 && (
             <View className='note-card'>
-              <Text className='card-title'>⚠ 最该补的 {report.weak_points.length} 点</Text>
+              <Text className='card-title'>⚠ 需补强的 {report.weak_points.length} 项</Text>
               <View className='weak-list'>
                 {report.weak_points.map((point, i) => (
                   <Text key={i} className='weak-item'>
@@ -220,12 +220,12 @@ export default function ReportPage() {
             </View>
           )}
 
-          {/* 分享海报 */}
+          {/* 成绩海报 */}
           <View className='sticker-card'>
-            <Text className='card-title'>🔗 分享海报</Text>
+            <Text className='card-title'>🔗 成绩海报</Text>
             <View className='poster-preview'>
               <Text className='poster-quote'>
-                {report?.share_quote || '今天我又闯过一个知识关卡！'}
+                {report?.share_quote || '本次培训考核已完成'}
               </Text>
               <View className='poster-qr' />
             </View>
@@ -264,7 +264,7 @@ export default function ReportPage() {
       {/* 底部按钮 */}
       <View className='bottom-actions'>
         <View className='btn-primary action-btn' onClick={handleGoHome}>
-          <Text>再来一组</Text>
+          <Text>再考一组</Text>
         </View>
         <View className='btn-secondary action-btn' onClick={handleGeneratePoster}>
           <Text>生成海报</Text>

@@ -15,7 +15,7 @@ export default defineAppConfig({
   window: {
     backgroundTextStyle: 'light',
     navigationBarBackgroundColor: '#fff',
-    navigationBarTitleText: '鱼皮AI闯关学习',
+    navigationBarTitleText: '内训考核',
     navigationBarTextStyle: 'black',
   },
   tabBar: {
@@ -26,7 +26,7 @@ export default defineAppConfig({
     list: [
       {
         pagePath: 'pages/index/index',
-        text: '闯关',
+        text: '考核',
         iconPath: 'assets/tab-home.png',
         selectedIconPath: 'assets/tab-home-active.png',
       },

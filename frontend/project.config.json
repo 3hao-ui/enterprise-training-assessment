@@ -1,7 +1,7 @@
 {
   "miniprogramRoot": "dist/",
-  "projectname": "frontend",
-  "description": "鱼皮AI闯关学习小程序",
+  "projectname": "ent-training-weapp",
+  "description": "企业内部培训智能考核系统 · 微信小程序端",
   "appid": "wxa0a2a8ad99048c7c",
   "setting": {
     "urlCheck": true,

@@ -28,7 +28,7 @@ export default function IndexPage() {
   useDidShow(() => {
     const cached = getCachedUser()
     if (cached) setUser(cached)
-    // 刷新闯关历史（从报告页返回或新完成闯关后）
+    // 刷新考核记录（从复盘页返回或新完成一场考核后）
     getQuizHistory(1, 4)
       .then((res) => setHistoryItems(res.items))
       .catch(() => {})
@@ -37,7 +37,7 @@ export default function IndexPage() {
   const handleGenerate = async () => {
     const trimmed = inputValue.trim()
     if (!trimmed) {
-      Taro.showToast({ title: '请输入学习内容', icon: 'none' })
+      Taro.showToast({ title: '请输入考核内容', icon: 'none' })
       return
     }
 
@@ -54,7 +54,7 @@ export default function IndexPage() {
         if (status === 'running') setLoadingText('AI 正在生成题目...')
       })
 
-      // 3. 跳转闯关页
+      // 3. 跳转答题页
       Taro.navigateTo({
         url: `/pages/quiz/index?quizData=${encodeURIComponent(JSON.stringify(quizData))}`,
       })
@@ -75,10 +75,10 @@ export default function IndexPage() {
             <Image className='hello-avatar-img' src={user.avatar_url} mode='aspectFill' />
           ) : (
             <View className='hello-avatar'>
-              <Text>{user?.nickname?.[0] || '鱼'}</Text>
+              <Text>{user?.nickname?.[0] || '员'}</Text>
             </View>
           )}
-          <Text className='hello-name'>你好，{user?.nickname || '同学'}</Text>
+          <Text className='hello-name'>你好，{user?.nickname || '同事'}</Text>
         </View>
         <View className='coin-badge'>
           <Text className='coin-text'>{user?.total_xp ?? 0}</Text>
@@ -87,17 +87,17 @@ export default function IndexPage() {
       </View>
 
       {/* 标题 */}
-      <Text className='page-title'>今天想闯哪一关？</Text>
+      <Text className='page-title'>今天要做哪场考核？</Text>
 
       {/* 输入区域 */}
       <View className='quick-input'>
         <View className='input-head'>
-          <View className='input-label'>输入你想学的内容</View>
-          <View className='mini-mascot'>🐟</View>
+          <View className='input-label'>输入本次考核主题</View>
+          <View className='mini-mascot'>📋</View>
         </View>
         <Textarea
           className='input-area'
-          placeholder={'例如：RAG 和传统搜索有什么区别？\n我想搞懂向量数据库是怎么配合工作的。\n最好通过闯关题帮我记住重点。'}
+          placeholder={'例如：数据分级与导出审批要求\n我想确认自己掌握了合规红线。\n请根据培训资料出题考核我。'}
           value={inputValue}
           onInput={(e) => setInputValue(e.detail.value)}
           maxlength={500}
@@ -113,14 +113,14 @@ export default function IndexPage() {
             ) : (
               <>
                 <Text className='btn-arrow'>→</Text>
-                <Text>开始生成题目</Text>
+                <Text>生成考核题目</Text>
               </>
             )}
           </View>
         </View>
       </View>
 
-      {/* 已完成关卡 */}
+      {/* 我的考核记录 */}
       {historyItems.length > 0 && (
         <View className='cards-grid'>
           {historyItems.map((item) => (
@@ -143,20 +143,20 @@ export default function IndexPage() {
         </View>
       )}
 
-      {/* 学习小贴士 */}
-      <Text className='section-title'>💡 学习小贴士</Text>
+      {/* 备考提示 */}
+      <Text className='section-title'>💡 备考提示</Text>
       <View className='tip-list'>
         <View className='tip-item'>
           <Text className='tip-icon'>🎯</Text>
-          <Text className='tip-text'>每天坚持闯关一次，知识积累看得见</Text>
+          <Text className='tip-text'>每月至少完成一次培训考核</Text>
         </View>
         <View className='tip-item'>
           <Text className='tip-icon'>📝</Text>
-          <Text className='tip-text'>完成闯关后查看报告，重点复习薄弱知识点</Text>
+          <Text className='tip-text'>考核后查看复盘报告，重点补强薄弱知识点</Text>
         </View>
         <View className='tip-item'>
           <Text className='tip-icon'>⭐</Text>
-          <Text className='tip-text'>答对越多，经验值涨得越快哦</Text>
+          <Text className='tip-text'>答对越多，考核积分越高</Text>
         </View>
       </View>
     </View>

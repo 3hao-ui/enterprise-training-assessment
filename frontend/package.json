@@ -2,7 +2,7 @@
   "name": "frontend",
   "version": "1.0.0",
   "private": true,
-  "description": "鱼皮AI闯关学习小程序",
+  "description": "企业内部培训智能考核系统 · 微信小程序端（Taro）",
   "templateInfo": {
     "name": "default",
     "typescript": true,

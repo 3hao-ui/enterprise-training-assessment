@@ -144,10 +144,10 @@ export default function KnowledgePage() {
     setGeneratingDocId(doc.doc_id)
     setGeneratingText('正在创建任务...')
     try {
-      const userInput = `请基于我上传的知识库文档《${doc.file_name}》生成一套闯关题`
+      const userInput = `请基于我上传的培训资料《${doc.file_name}》生成一套考核题目`
       const { task_id } = await generateQuizAsync(userInput, 5, doc.doc_id)
 
-      setGeneratingText('AI 正在阅读知识库并生成题目...')
+      setGeneratingText('AI 正在阅读培训资料并出题...')
       const quizData = await pollQuizTask(task_id, (status) => {
         if (status === 'running') setGeneratingText('AI 正在生成题目...')
       })
@@ -168,15 +168,15 @@ export default function KnowledgePage() {
       <View className='knowledge-content'>
         <View className='upload-card' onClick={handleUpload}>
           <Text className='upload-icon'>{uploading ? '⏳' : '＋'}</Text>
-          <Text className='upload-text'>{uploading ? '上传中...' : '上传文档建知识库'}</Text>
+          <Text className='upload-text'>{uploading ? '上传中...' : '上传培训资料建知识库'}</Text>
           <Text className='upload-hint'>支持 PDF / Word / Markdown / 文本，最大 10MB</Text>
         </View>
 
-        <Text className='section-title'>我的文档</Text>
+        <Text className='section-title'>我的培训资料</Text>
 
         {documents.length === 0 ? (
           <View className='empty-list'>
-            <Text className='empty-text'>暂无知识库文档，上传一篇试试吧</Text>
+            <Text className='empty-text'>暂无培训资料，上传一篇后开始出题</Text>
           </View>
         ) : (
           <View className='doc-list'>
@@ -202,7 +202,7 @@ export default function KnowledgePage() {
                       className={`quiz-btn ${generatingDocId === doc.doc_id ? 'is-loading' : ''}`}
                       onClick={() => handleStartQuiz(doc)}
                     >
-                      <Text>{generatingDocId === doc.doc_id ? generatingText : '开始闯关'}</Text>
+                      <Text>{generatingDocId === doc.doc_id ? generatingText : '开始考核'}</Text>
                     </View>
                   )}
                   <View className='delete-btn' onClick={() => handleDelete(doc)}>

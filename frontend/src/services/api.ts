@@ -203,12 +203,12 @@ export function updateUserProfile(data: { nickname?: string; avatar_url?: string
   })
 }
 
-/** 获取闯关历史（分页） */
+/** 获取考核记录（分页） */
 export function getQuizHistory(page = 1, pageSize = 10) {
   return request<QuizHistoryList>(`/user/quizzes?page=${page}&page_size=${pageSize}`)
 }
 
-/** 获取闯关详情 */
+/** 获取考核详情 */
 export function getQuizDetail(quizId: string) {
   return request<QuizDetailResponse>(`/user/quizzes/${quizId}`)
 }

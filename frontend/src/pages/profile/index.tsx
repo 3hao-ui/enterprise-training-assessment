@@ -98,16 +98,17 @@ export default function ProfilePage() {
             />
           ) : (
             <Text className='nickname' onClick={() => setEditing(true)}>
-              {profile?.nickname || '学习者'}
+              {profile?.nickname || '同事'}
             </Text>
           )}
-          <Text className='slogan'>每天闯关一点点，进步看得见</Text>
+          <Text className='slogan'>合规意识，日积月累</Text>
+          <Text className='product-name'>企业内部培训智能考核系统</Text>
         </View>
 
         <View className='stats-row'>
           <View className='stat-item'>
             <Text className='stat-num'>{profile?.quiz_count ?? 0}</Text>
-            <Text className='stat-label'>闯关次数</Text>
+            <Text className='stat-label'>考核次数</Text>
           </View>
           <View className='stat-item'>
             <Text className='stat-num'>{profile?.correct_count ?? 0}</Text>
@@ -120,7 +121,7 @@ export default function ProfilePage() {
         </View>
 
         <View className='xp-row'>
-          <Text className='xp-label'>经验值</Text>
+          <Text className='xp-label'>考核积分</Text>
           <View className='xp-value-badge'>
             <Text className='xp-value'>{profile?.total_xp ?? 0}</Text>
             <Text className='xp-star'>⭐</Text>
@@ -133,16 +134,16 @@ export default function ProfilePage() {
         >
           <View className='knowledge-entry-left'>
             <Text className='knowledge-entry-icon'>📚</Text>
-            <Text className='knowledge-entry-text'>我的知识库</Text>
+            <Text className='knowledge-entry-text'>我的培训资料</Text>
           </View>
           <Text className='knowledge-entry-arrow'>›</Text>
         </View>
 
-        {/* 闯关历史 */}
-        <Text className='section-title'>闯关记录</Text>
+        {/* 考核记录 */}
+        <Text className='section-title'>考核记录</Text>
         {historyItems.length === 0 ? (
           <View className='empty-history'>
-            <Text className='empty-text'>暂无闯关记录，去首页开始学习吧</Text>
+            <Text className='empty-text'>暂无考核记录，去首页发起一场考核</Text>
           </View>
         ) : (
           <View className='history-list'>
