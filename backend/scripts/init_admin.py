@@ -1,4 +1,4 @@
-"""初始化管理员账号：python -m scripts.init_admin [username] [password]"""
+"""初始化管理员账号：python -m scripts.init_admin <用户名> <密码>"""
 
 import asyncio
 import sys
@@ -51,6 +51,7 @@ async def init_admin(username: str, password: str) -> None:
 
 
 if __name__ == "__main__":
-    user = sys.argv[1] if len(sys.argv) > 1 else "admin"
-    pwd = sys.argv[2] if len(sys.argv) > 2 else "Admin@123456"
-    asyncio.run(init_admin(user, pwd))
+    if len(sys.argv) < 3:
+        print("用法: python -m scripts.init_admin <用户名> <密码>")
+        sys.exit(1)
+    asyncio.run(init_admin(sys.argv[1], sys.argv[2]))
