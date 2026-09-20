@@ -1,4 +1,4 @@
-# 环境变量与密钥（务必通过微信云托管控制台的"环境变量"功能注入，不要打包进镜像）
+# 环境变量与密钥：只走运行时注入（docker-compose 的 env_file），绝不打包进镜像
 .env
 .env.*
 !.env.example
@@ -17,12 +17,10 @@ __pycache__/
 .venv/
 venv/
 
-# 本地数据目录：容器磁盘不持久化，运行时会自动重建，无需打包旧数据
-data/chroma/*
-data/uploads/*
+# 本地数据目录：由 compose 挂载 ./data，镜像内不带旧数据
+data/
 
-# 测试与文档
+# 测试与文档（scripts/ 保留在镜像内，init_admin 需在容器里执行）
 tests/
 sql/
-scripts/
 *.md

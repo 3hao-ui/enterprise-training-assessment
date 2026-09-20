@@ -17,14 +17,20 @@ SCHEMA_STATEMENTS: Final[list[str]] = [
     """
     CREATE TABLE IF NOT EXISTS users (
         id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-        openid VARCHAR(64) NOT NULL,
+        openid VARCHAR(64) NULL,
+        username VARCHAR(64) NULL,
+        password_hash VARCHAR(100) NULL,
+        role VARCHAR(16) NOT NULL DEFAULT 'employee',
+        department VARCHAR(64) NOT NULL DEFAULT '',
+        status TINYINT NOT NULL DEFAULT 1,
         nickname VARCHAR(100) NOT NULL DEFAULT '学习者',
         avatar_url VARCHAR(500) NOT NULL DEFAULT '',
         total_xp INT NOT NULL DEFAULT 0,
         created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         PRIMARY KEY (id),
-        UNIQUE KEY uk_users_openid (openid)
+        UNIQUE KEY uk_users_openid (openid),
+        UNIQUE KEY uk_users_username (username)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     """,
     """
@@ -145,7 +151,88 @@ SCHEMA_STATEMENTS: Final[list[str]] = [
         KEY idx_image_gen_logs_user_created (user_id, created_at)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     """,
+    """
+    CREATE TABLE IF NOT EXISTS assessments (
+        id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+        assessment_id VARCHAR(64) NOT NULL,
+        title VARCHAR(255) NOT NULL,
+        doc_id VARCHAR(64) NOT NULL,
+        question_count INT NOT NULL DEFAULT 5,
+        difficulty VARCHAR(10) NOT NULL DEFAULT 'mixed',
+        pass_accuracy DECIMAL(5, 2) NOT NULL DEFAULT 60.00,
+        deadline DATETIME NULL,
+        status ENUM('open', 'closed') NOT NULL DEFAULT 'open',
+        created_by BIGINT UNSIGNED NOT NULL,
+        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        PRIMARY KEY (id),
+        UNIQUE KEY uk_assessments_assessment_id (assessment_id),
+        KEY idx_assessments_status (status),
+        CONSTRAINT fk_assessments_created_by
+            FOREIGN KEY (created_by) REFERENCES users (id)
+            ON DELETE CASCADE
+            ON UPDATE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    """,
+    """
+    CREATE TABLE IF NOT EXISTS assessment_records (
+        id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+        assessment_id VARCHAR(64) NOT NULL,
+        user_id BIGINT UNSIGNED NOT NULL,
+        quiz_id VARCHAR(64) NOT NULL,
+        accuracy DECIMAL(5, 2) NOT NULL,
+        passed TINYINT NOT NULL DEFAULT 0,
+        duration_seconds INT NOT NULL DEFAULT 0,
+        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (id),
+        KEY idx_records_assessment_user (assessment_id, user_id),
+        CONSTRAINT fk_records_assessment_id
+            FOREIGN KEY (assessment_id) REFERENCES assessments (assessment_id)
+            ON DELETE CASCADE
+            ON UPDATE CASCADE,
+        CONSTRAINT fk_records_user_id
+            FOREIGN KEY (user_id) REFERENCES users (id)
+            ON DELETE CASCADE
+            ON UPDATE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    """,
 ]
+
+
+async def _migrate_users_table(cursor) -> None:
+    """老库补网页端字段；新库建表已含这些字段，全部跳过。幂等，可重复执行。"""
+    await cursor.execute(
+        "SELECT COLUMN_NAME, IS_NULLABLE FROM information_schema.COLUMNS "
+        "WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'users'"
+    )
+    cols = {row[0]: row[1] for row in await cursor.fetchall()}
+    if not cols:
+        return
+
+    additions = [
+        ("username", "VARCHAR(64) NULL"),
+        ("password_hash", "VARCHAR(100) NULL"),
+        ("role", "VARCHAR(16) NOT NULL DEFAULT 'employee'"),
+        ("department", "VARCHAR(64) NOT NULL DEFAULT ''"),
+        ("status", "TINYINT NOT NULL DEFAULT 1"),
+    ]
+    for name, ddl in additions:
+        if name not in cols:
+            await cursor.execute(f"ALTER TABLE users ADD COLUMN {name} {ddl}")
+
+    if cols.get("openid") == "NO":
+        await cursor.execute("ALTER TABLE users MODIFY openid VARCHAR(64) NULL")
+
+    await cursor.execute(
+        "SELECT COUNT(*) FROM information_schema.STATISTICS "
+        "WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'users' "
+        "AND INDEX_NAME = 'uk_users_username'"
+    )
+    (has_index,) = await cursor.fetchone()
+    if not has_index:
+        await cursor.execute(
+            "ALTER TABLE users ADD UNIQUE KEY uk_users_username (username)"
+        )
 
 
 async def init_mysql() -> None:
@@ -190,6 +277,7 @@ async def init_mysql() -> None:
         async with conn.cursor() as cursor:
             for statement in SCHEMA_STATEMENTS:
                 await cursor.execute(statement)
+            await _migrate_users_table(cursor)
 
     logger.info("mysql_initialized", database=settings.mysql_database)
 

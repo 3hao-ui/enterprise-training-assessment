@@ -63,6 +63,10 @@ class Settings(BaseSettings):
     wechat_app_id: str = ""
     wechat_app_secret: str = ""
 
+    # 网页端初始管理员（scripts/init_admin.py 使用；密码留空则不创建）
+    admin_username: str = "admin"
+    admin_password: str = ""
+
     # MySQL
     mysql_host: str = "localhost"
     mysql_port: int = 3306

@@ -78,16 +78,20 @@ async def _fetch_context(req: QuizGenerateRequest, user_id: Optional[int]) -> st
 async def handle_quiz_generate(
     req: QuizGenerateRequest,
     user_id: Optional[int] = None,
+    doc_owner_id: Optional[int] = None,
 ) -> QuizGenerateResponse:
     # 内容安全检查
     if not check_content(req.user_input):
         raise ContentFilterError("输入内容包含不当内容，请修改后重试")
 
+    # 考核场景：资料归属管理员、答题会话归属员工，二者分离
+    owner_id = doc_owner_id if doc_owner_id is not None else user_id
+
     # 若指定了知识库文档，先校验其归属与状态
-    await _validate_doc_id(req, user_id)
+    await _validate_doc_id(req, owner_id)
 
     # 获取参考资料：指定 doc_id 时走知识库 RAG，否则走联网搜索
-    search_context = await _fetch_context(req, user_id)
+    search_context = await _fetch_context(req, owner_id)
 
     try:
         quiz_output = await generate_quiz(

@@ -7,8 +7,17 @@ import structlog
 
 from app.core.auth import create_token
 from app.core.config import get_settings
-from app.core.exceptions import AuthenticationError
-from app.models.user import LoginResponse, UserBrief, UserProfile
+from app.core.exceptions import AuthenticationError, BusinessError
+from app.core.password import hash_password, verify_password
+from app.models.user import (
+    EmployeeItem,
+    EmployeeList,
+    LoginResponse,
+    UserBrief,
+    UserProfile,
+    WebLoginResponse,
+    WebUserBrief,
+)
 from app.repositories import user_repository, quiz_repository
 
 logger = structlog.get_logger()
@@ -74,6 +83,29 @@ async def handle_login(code: str) -> LoginResponse:
     )
 
 
+async def handle_web_login(username: str, password: str) -> WebLoginResponse:
+    """网页端登录：username + password -> 校验 -> JWT（带 role）。"""
+    user = await user_repository.find_user_by_username(username)
+    if user is None or not user["password_hash"]:
+        raise AuthenticationError("用户名或密码错误")
+    if not verify_password(password, user["password_hash"]):
+        raise AuthenticationError("用户名或密码错误")
+    if user["status"] != 1:
+        raise AuthenticationError("账号已停用，请联系管理员")
+
+    token = create_token(user_id=user["id"], openid=user["openid"] or "", role=user["role"])
+    return WebLoginResponse(
+        token=token,
+        user=WebUserBrief(
+            id=user["id"],
+            username=user["username"],
+            nickname=user["nickname"],
+            role=user["role"],
+            department=user["department"],
+        ),
+    )
+
+
 async def get_profile(user_id: int) -> UserProfile:
     """获取用户档案，含统计聚合。"""
     user = await user_repository.get_user_by_id(user_id)
@@ -97,3 +129,40 @@ async def get_profile(user_id: int) -> UserProfile:
 async def update_profile(user_id: int, nickname: str | None, avatar_url: str | None) -> None:
     """更新用户档案。"""
     await user_repository.update_user_profile(user_id, nickname, avatar_url)
+
+
+async def create_employee(
+    username: str, password: str, nickname: str, department: str
+) -> dict:
+    """管理端新建员工账号。"""
+    if await user_repository.find_user_by_username(username) is not None:
+        raise BusinessError("用户名已存在")
+    return await user_repository.create_web_user(
+        username=username,
+        password_hash=hash_password(password),
+        nickname=nickname,
+        department=department,
+        role="employee",
+    )
+
+
+async def list_employees(page: int, page_size: int, keyword: str) -> EmployeeList:
+    items, total = await user_repository.list_web_users(page, page_size, keyword)
+    return EmployeeList(
+        items=[EmployeeItem(**item) for item in items],
+        total=total,
+        page=page,
+        page_size=page_size,
+    )
+
+
+async def update_employee(
+    user_id: int, nickname: str | None, department: str | None, status: int | None
+) -> None:
+    await user_repository.update_web_user(
+        user_id, nickname=nickname, department=department, status=status
+    )
+
+
+async def reset_employee_password(user_id: int, password: str) -> None:
+    await user_repository.update_password_hash(user_id, hash_password(password))

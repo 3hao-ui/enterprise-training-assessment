@@ -5,3 +5,7 @@ import uuid
 
 def gen_quiz_id() -> str:
     return f"quiz_{uuid.uuid4().hex[:12]}"
+
+
+def gen_assessment_id() -> str:
+    return f"asmt_{uuid.uuid4().hex[:12]}"

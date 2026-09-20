@@ -33,6 +33,22 @@ class AuthenticationError(Exception):
         super().__init__(self.message)
 
 
+class PermissionDeniedError(Exception):
+    """已登录但角色权限不足"""
+
+    def __init__(self, message: str = "无权限执行该操作"):
+        self.message = message
+        super().__init__(self.message)
+
+
+class BusinessError(Exception):
+    """业务规则校验失败（参数冲突、资源不存在等）"""
+
+    def __init__(self, message: str = "操作失败"):
+        self.message = message
+        super().__init__(self.message)
+
+
 class KnowledgeBaseError(Exception):
     """知识库操作异常（格式/大小/数量校验失败、文档不存在或未就绪等）"""
 

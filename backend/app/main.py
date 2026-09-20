@@ -7,13 +7,15 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from app.api.v1.routes import health, knowledge, quiz, report, user
+from app.api.v1.routes import admin, assessment, auth, health, knowledge, quiz, report, user
 from app.core.config import get_settings
 from app.core.db import close_mysql_pool, init_mysql
 from app.core.exceptions import (
     AuthenticationError,
+    BusinessError,
     ContentFilterError,
     KnowledgeBaseError,
+    PermissionDeniedError,
     QuizGenerationError,
     ReportGenerationError,
 )
@@ -51,6 +53,9 @@ app.add_middleware(
 
 # 注册路由
 app.include_router(health.router, prefix="/api/v1")
+app.include_router(auth.router, prefix="/api/v1")
+app.include_router(admin.router, prefix="/api/v1")
+app.include_router(assessment.router, prefix="/api/v1")
 app.include_router(quiz.router, prefix="/api/v1")
 app.include_router(report.router, prefix="/api/v1")
 app.include_router(user.router, prefix="/api/v1")
@@ -63,6 +68,22 @@ async def auth_error_handler(request: Request, exc: AuthenticationError):
     return JSONResponse(
         status_code=401,
         content=ApiResponse.error(code=4010, message=str(exc)).model_dump(),
+    )
+
+
+@app.exception_handler(PermissionDeniedError)
+async def permission_denied_handler(request: Request, exc: PermissionDeniedError):
+    return JSONResponse(
+        status_code=403,
+        content=ApiResponse.error(code=4030, message=str(exc)).model_dump(),
+    )
+
+
+@app.exception_handler(BusinessError)
+async def business_error_handler(request: Request, exc: BusinessError):
+    return JSONResponse(
+        status_code=400,
+        content=ApiResponse.error(code=4002, message=str(exc)).model_dump(),
     )
 
 
