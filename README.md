@@ -1,279 +1,190 @@
-# 鱼皮 AI 闯关学习小程序（yu-ai-learn）
+# 企业内部培训智能考核系统
 
-> 作者：[程序员鱼皮](https://yuyuanweb.feishu.cn/wiki/Abldw5WkjidySxkKxU2cQdAtnah)
->
-> 本项目为教学项目，提供完整视频教程 + 文字教程 + 简历写法 + 面试题解 + 答疑服务，帮你提升项目能力，给简历增加亮点！
->
-> ⭐️ 加入项目系列学习：[加入编程导航](https://www.codefather.cn/vip)
+把公司的培训资料交给 AI，自动出题、自动判分、自动生成复盘报告，管理员实时看成绩。
 
+传统内训考核有三个痛点：**出题慢**（一份合规手册人工出 5 道题要半小时）、**判分主观**（简答题没人愿意批）、**成绩难汇总**（考完散落在聊天记录里）。这个项目针对这三点做了一条完整链路：上传培训资料 → 向量化入库 → AI 按资料出题 → 逐题即时判分 → AI 复盘报告 → 管理端成绩报表。
 
+同一套后端支撑两个前端：**网页端**（管理端 + 员工端，已部署）和**微信小程序端**（员工碎片时间自测，本地演示）。
 
-## 一、项目介绍
+---
 
-这是一套以 **AI 编程实战** 为核心的项目教程，基于 Taro + Python FastAPI + LangChain + LangGraph + DeepSeek，用 AI 编程的方式从 0 到 1 开发一个《AI 闯关学习微信小程序》，并且走完部署上线的全流程，带你亲身体验 AI Vibe Coding 的完整工作流，学会用 AI 做出一个能上线、能传播、能变现的小程序产品！
+## 演示入口
 
-![](https://pic.yupi.icu/1/1-project-demo-overview.png)
+| 端 | 地址 | 说明 |
+| --- | --- | --- |
+| 网页端（管理端 / 员工端） | `http://<服务器公网IP>:8080` | 阿里云 ECS，Docker Compose + Nginx 反代。域名待 ICP 备案后启用 |
+| 小程序端 | 本地编译后用微信开发者工具打开 `frontend/dist` | 测试号，未发布。详见 [保姆级本地运行指南](docs/保姆级本地运行指南.md) |
+| 接口文档 | 后端启动后访问 `http://127.0.0.1:8000/docs` | FastAPI 自动生成 |
 
-输入一句话说出你想学什么，AI 自动联网搜索最新资料并生成一组闯关题目，边答边学，每答一题立刻给出答案和讲解，通关后还能拿到一份 AI 复盘报告。
+---
 
+## 核心功能
 
+**管理端（网页）**
 
-### 为什么做这个项目？
+- 员工管理：批量建号、重置密码、停用账号（停用后 JWT 仍然有效但请求会被拦，见「关键设计」）
+- 培训资料：上传 PDF / Word / Markdown，异步解析切片并写入向量库，实时显示分片数与状态
+- 考核任务：基于某份资料发布一套考核，可配置题量、难度、及格线、截止时间
+- 成绩报表：按考核任务汇总参考人数、平均正确率、通过率，可下钻到每个人的答题明细
 
-学知识这件事，最大的敌人不是难，而是枯燥。看文档、看视频，看着看着就走神了，看完还是记不住。
+**员工端（网页）**
 
-而人天生喜欢玩游戏，喜欢闯关、答题、拿奖励。既然现在有了 AI，为什么不让 AI 把「我想学的任何知识」自动变成一局闯关游戏呢？
+- 我的考核：列出待完成 / 已完成 / 已截止的任务
+- 答题：逐题提交、即时判分与讲解，多选支持部分选中，答错不显示正确答案直到提交
+- 我的成绩 + AI 复盘报告：掌握度、薄弱知识点、知识总结、后续建议
 
-为什么做成微信小程序，而不是 App 或者网页？因为学习这件事发生在碎片时间里，微信小程序免安装、随时随地能打开、依托微信生态的流量入口、还便于分享给朋友一起卷，对一个学习类产品来说几乎是最优形态。
+**小程序端（Taro，同一后端）**
 
-更重要的是，这个项目的骨架可以直接复用到任何垂直领域，换个知识源就是一个新产品，比如驾考宝典、面试题库、企业内部培训考核、职业资格考试复习、儿童英语单词闯关等等。
+- 一句话自拟主题让 AI 出题，也可选自己上传的培训资料出题
+- 逐题即时反馈、AI 复盘报告、考核积分、我的培训资料
 
-![](https://pic.yupi.icu/1/2-driving-theory-quiz-flow.png)
+---
 
+## 技术栈
 
-
-### 8 大核心能力
-
-1）一句话起题，AI 自动联网搜索并生成闯关题目。
-
-大模型的知识有截止日期，所以项目给出题环节接入了 Tavily 联网搜索，用 LangGraph 做成了一个会自己决定搜什么、搜几轮的 ReAct Agent，保证题目不过时。
-
-![](https://pic.yupi.icu/1/3-vibecoding-web-search-and-correct-answer.png)
-
-
-
-2）闯关答题，答完立刻判分和讲解。
-
-支持单选、多选、判断三种题型，每题答完立刻高亮正确答案、标记错误选项，并给出解析和对应的知识点，答错也一样有讲解。
-
-![](https://pic.yupi.icu/1/4-vibecoding-wrong-answer-and-submit.png)
-
-
-
-3）AI 生成通关复盘报告。
-
-包含掌握度评分、薄弱知识点、三句话知识总结和下一步学习建议，还会结算本局获得的经验值。
-
-![](https://pic.yupi.icu/1/5-vibecoding-report-and-question-review.png)
-
-
-
-4）想学什么就学什么，输入完全自由。
-
-一句话、一段话、一个网址都可以，AI 会自行判断该怎么补全知识背景。
-
-![](https://pic.yupi.icu/1/6-yupi-ai-nav-search-and-quiz.png)
-
-
-
-5）上传私有文档，基于自己的知识库出题（RAG）。
-
-支持 PDF、Word、Markdown、纯文本四种格式，文档会被自动解析、分块、向量化后存入 Chroma 向量库，之后就能基于这篇文档出题，适合企业培训考核、特定题库复习等场景。
-
-![](https://pic.yupi.icu/1/7-knowledge-base-upload-and-quiz.png)
-
-
-
-6）AI 给题目配图，学得更直观。
-
-调用通义千问文生图模型按知识点生成配图，并转存到腾讯云 COS 获得永久链接，同时做了每日额度和并发控制来管住成本。
-
-![](https://pic.yupi.icu/1/8-ai-generated-illustration-quiz.png)
-
-
-
-7）微信一键登录，闯关记录随时回看。
-
-采用微信静默登录，用户无感授权即可拥有账号。个人中心能看到累计经验值和历史闯关列表，点进任意一条还能回看当时的复盘报告。项目还做了「可选登录」设计，没登录也能完整体验核心流程。
-
-![](https://pic.yupi.icu/1/9-profile-and-history.png)
-
-
-
-8）真正上线，微信里搜得到。
-
-后端 Docker 化部署到微信云托管，走完服务类目申请、ICP 备案、代码审核流程，最终正式发布。
-
-![](https://pic.yupi.icu/1/image-20260811183313570.png)
-
-
-
-## 二、项目优势
-
-本项目选题新颖，紧跟 AI 编程时代。区别于增删改查的烂大街项目，你将从一个想法开始，实战最主流的 AI 编程方法，上线发布一个真正有人愿意用的产品。
-
-项目内容精炼，**不到一周就能学完**，带你快速掌握 AI 编程做产品的完整工作流，给你的简历和求职大幅增加竞争力！
-
-技术丰富，覆盖小程序开发和 AI 应用开发的全链路：
-
-![](https://pic.yupi.icu/1/image-20260811155041400.png)
-
-从这个项目中你可以学到：
-
-- 如何用 AI 做需求调研和竞品分析，划清 MVP 和扩展功能的边界？
-- 如何配置 MCP 和 Agent Skills，充分扩展 AI 编程工具的能力？
-- 如何让多个 AI 工具「赛马」产出 UI 原型，做出精美界面？
-- 如何用 AI 从 0 开发一个微信小程序，包括跨端框架选型、脚手架初始化、页面开发？
-- 如何用 LangChain 编排大模型，让 AI 稳定输出结构化的 JSON 题目数据？
-- 如何用 LangGraph 构建 ReAct 智能体，把一次大模型调用升级成会自主联网查资料的 AI Agent？
-- 如何从零实现一套 RAG 知识库，包括文档解析、分块、向量化、检索增强出题？
-- 如何接入 AI 生图并结合对象存储，把临时图片链接转成永久可用的资源？
-- 如何用 OpenSpec 做规范驱动开发，让 AI 在长周期项目里稳定产出？
-- 什么是 Harness Engineering？如何用需求文档、方案设计、UI 原型、MCP、Skills 和 Git 给 AI 搭好脚手架？
-- 如何把项目 Docker 容器化部署，并走完一整套小程序发布流程？
-
-
-
-### 鱼皮系列项目优势
-
-鱼皮原创项目系列以 **实战视频教程** 为主，从 0 到 1 带做，涵盖企业级 Java / Python 后端 + 前端全栈项目、最新 AI 应用开发 + AI 编程项目、大厂架构进阶项目。已有近 **30 套** 保姆级项目教程，并提供现成的源码、简历写法和面试题解，帮你用最快的速度学会做项目、写满简历、拿到 Offer。
-
-比起看网上的教程学习，鱼皮项目系列的优势：从学知识 => 实践项目 => 复习笔记 => 项目答疑 => 简历写法 => 面试题解的一条龙服务
-
-![](https://pic.yupi.icu/1/%25E9%25B1%25BC%25E7%259A%25AE%25E9%25A1%25B9%25E7%259B%25AE%25E5%25AE%259E%25E6%2588%2598%25E7%259A%2584%25E4%25BC%2598%25E5%258A%25BF%25E5%25A4%25A7.jpeg)
-
-编程导航已有 **近 30 套项目教程！** 每个项目的学习重点不同，从 0 到 1 带做，有大量完整的 **AI 应用开发 + AI 编程 + 全栈项目**，零基础也能学！
-
-详细请见：[https://codefather.cn/course](https://www.codefather.cn/course)（在该页面右侧有教程推荐和学习建议）
-
-![](https://pic.yupi.icu/1/%E9%A1%B9%E7%9B%AE%E6%95%99%E7%A8%8B.png)
-
-鱼皮的项目帮很多同学拿到了大厂高薪 Offer：
-
-![](https://pic.yupi.icu/1/%E7%BC%96%E7%A8%8B%E5%AF%BC%E8%88%AA2026%20offer%E6%8A%A5%E5%96%9C.png)
-
-
-
-## 三、更多介绍
-
-该项目功能丰富，涵盖闯关答题、AI 出题、复盘报告、用户系统、知识库、AI 配图 6 大模块，30+ 功能点，覆盖了一个真实上线小程序的核心业务场景。
-
-![](https://pic.yupi.icu/1/image-20260811155000927.png)
-
-本项目以 Taro 微信小程序 + Python FastAPI + LangChain / LangGraph 为核心，前后端分离，综合运用了多种主流的小程序开发和 AI 应用开发技术。
-
-![](https://pic.yupi.icu/1/image-20260811155136853.png)
-
-
-
-### 技术选型
-
-| 层面 | 技术选型 |
+| 层 | 选型 |
 | --- | --- |
-| 小程序前端 | Taro 4 · React 18 · TypeScript · Sass |
-| 后端服务 | Python 3.11+ · FastAPI · Pydantic v2 · Uvicorn · asyncio |
-| AI 编排 | LangChain · LangGraph · langchain-openai |
-| 大模型 / 检索 | DeepSeek（出题 / 报告）· 阿里云百炼（Embedding / 文生图）· Tavily（联网搜索） |
-| 向量检索 | Chroma（RAG 知识库） |
-| 数据存储 | MySQL（aiomysql 异步连接池）· 腾讯云 COS（对象存储） |
-| 鉴权 | 微信 `jscode2session` 静默登录 + JWT |
-| 测试 | pytest · pytest-asyncio |
-| 部署 | Docker · 微信云托管 · 云数据库 MySQL |
-| AI 编程工具 | GitHub Copilot · Claude Code · OpenSpec · MCP · Agent Skills |
-| AI 编程方法 | Harness Engineering · 规范驱动开发（SDD）· 原型赛马 · 上下文管理 |
+| AI 编排 | LangChain + LangGraph（`create_react_agent` 实现 Agentic RAG）、Tavily 联网搜索 |
+| 大模型 | DeepSeek（OpenAI 兼容协议，默认 `deepseek-chat`，可用 `DEEPSEEK_MODEL` 覆盖） |
+| 向量检索 | ChromaDB（按用户隔离 collection）+ 阿里云 DashScope `text-embedding-v4` |
+| 后端 | Python 3.12 + FastAPI + aiomysql 连接池（裸 SQL，未用 ORM）+ structlog 结构化日志 |
+| 数据库 | MySQL 8，7 张表，启动时幂等迁移 |
+| 网页端 | Vite + React 19 + Ant Design 6 + TypeScript + react-router 7 |
+| 小程序端 | Taro 4 + React 18 + Sass（一套代码编译 weapp / H5） |
+| 鉴权 | bcrypt（cost 12）+ JWT HS256（payload 带 `role`）+ FastAPI 依赖注入做 RBAC |
+| 部署 | Docker Compose（mysql + backend）+ 宝塔 Nginx 静态托管与反向代理 |
 
+---
 
+## 架构
 
-## 四、快速运行
-
-> 完整的保姆级步骤请参考 [保姆级本地运行指南](./docs/保姆级本地运行指南.md)，里面有每个 API Key 的申请步骤、环境变量逐项说明和 11 个常见问题排查。下面是精简版。
-
-
-
-### 前置条件
-
-- Python >= 3.11
-- Node.js >= 18（推荐 20+）
-- MySQL >= 8.0
-- 微信开发者工具（[下载地址](https://developers.weixin.qq.com/miniprogram/dev/devtools/download.html)）
-- 一个 [DeepSeek API Key](https://platform.deepseek.com/)（✅ 必需，用于 AI 出题和报告）
-- 一个 [Tavily API Key](https://tavily.com/)（🔧 可选，用于联网搜索增强）
-- 一个 [阿里云百炼 API Key](https://bailian.console.aliyun.com/)（🔧 可选，用于知识库 RAG 和 AI 生图）
-- 一个 [腾讯云 COS](https://console.cloud.tencent.com/cos) 存储桶（🔧 可选，用于存储题目配图）
-- 一个 [微信小程序测试号](https://developers.weixin.qq.com/sandbox)（🔧 可选，用于微信登录）
-
-### 1. 克隆项目
-
-```bash
-git clone https://github.com/liyupi/yu-ai-learn.git
-cd yu-ai-learn
+```mermaid
+flowchart LR
+    subgraph 客户端
+      W[网页端 React+antd]
+      M[小程序端 Taro]
+    end
+    W -->|/api/v1| N[Nginx :8080]
+    N --> B[FastAPI :8010→容器:8000]
+    M -->|localhost:8000 本地演示| B
+    B --> P[aiomysql 连接池] --> DB[(MySQL 8)]
+    B --> AG[LangGraph ReAct Agent]
+    AG --> LLM[DeepSeek]
+    AG -.联网搜索.-> TV[Tavily]
+    B --> EMB[DashScope Embedding] --> CH[(ChromaDB 向量库)]
 ```
 
-### 2. 启动后端
+出题链路（`backend/app/llm/quiz_chain.py` → `app/services/quiz_service.py`）：
+
+```
+用户输入 / 培训资料
+  ├─ 有关联资料 → ChromaDB 按 doc_owner_id 召回 top-k 片段
+  ├─ 无资料     → ReAct Agent 自行决定搜什么、搜几轮（Tavily）
+  └─ 拼装 Prompt → DeepSeek → 严格 JSON 解析 → 落库 quiz_sessions
+```
+
+出题耗时约 7 秒，因此走**异步任务 + 前端轮询**：`POST /quiz/async` 秒级返回 `task_id`，前端每 2 秒轮 `GET /task/{id}`，避免长连接被网关切断。
+
+---
+
+## 关键设计
+
+**1. Agentic RAG，而不是固定检索一次**
+
+朴素 RAG 检索一次就出题，遇到用户输入很短（"RAG 和传统搜索有什么区别"）时召回质量差。这里用 `create_react_agent` 让模型自己判断"要不要搜、搜什么词、搜几轮"，并允许它根据第一轮结果改写查询再搜。当用户指定了培训资料时，改用向量召回并**强制以资料为准**，保证考核内容可溯源到公司文档。
+
+**2. 密码与鉴权**
+
+- 密码用 bcrypt（cost 12）加盐哈希，实测单次哈希约 200ms。这个"慢"是特性不是缺陷：它把离线爆破的成本抬高约 4 个数量级，而登录是低频操作，200ms 用户无感。
+- JWT payload 带 `role`，但**不信 token 里的角色**：`get_current_web_user` 每次回查数据库并校验 `status == 1`，所以管理员停用账号后，该账号手里的有效 token 立刻失效。`get_current_admin` 在其之上再叠一层角色判断。
+- 小程序用 `openid` 静默登录，网页端用 `username/password`，两套身份共用 `users` 表，靠 `role` 字段区分路由。
+
+**3. 数据隔离**
+
+知识库按用户建独立 collection（`kb_user_{user_id}`），检索时带上 `doc_owner_id` 过滤，避免 A 员工上传的资料被 B 员工出题时召回。管理端跨员工查询走独立的 admin 接口，不复用员工端查询路径。
+
+**4. 结构化输出与容错**
+
+Prompt 里明确"只能输出合法 JSON"，解析层再做一次校验：题量不足自动补齐、判断题选项强制为「正确/错误」、多选答案少于 2 个判为无效并重试。AI 报告落库失败不阻断答题流程（`report_service.py` 里持久化异常只记日志）。
+
+---
+
+## 项目结构
+
+```
+backend/          FastAPI 后端
+  app/api/v1/routes/   auth / admin / assessment / knowledge / quiz / report / user
+  app/services/        业务编排（出题、判分、报告、知识库）
+  app/llm/             LangGraph Agent、Prompt 链、Embedding
+  app/repositories/    裸 SQL 数据访问
+  app/core/            config / db（含幂等迁移）/ auth / password / security
+  tests/               165 个用例
+web/              网页端（管理端 + 员工端），Vite + React + antd
+frontend/         小程序端，Taro 4（编译 weapp / H5）
+docs/             需求分析、方案设计、部署手册、本地运行指南、面试讲解要点
+samples/          演示用培训资料
+prototypes/       早期 AI 生成的原型图
+```
+
+---
+
+## 本地运行
 
 ```bash
+# 1. 后端
 cd backend
+cp .env.example .env          # 填 DeepSeek Key、MySQL 连接信息
+pip install -r requirements.txt
+python -m scripts.init_admin <管理员用户名> <密码>   # 不传默认口令，必须自己指定
+./venv/Scripts/python.exe -m uvicorn app.main:app --host 127.0.0.1 --port 8000
 
-# 建议使用虚拟环境
-python3 -m venv venv
-source venv/bin/activate          # Windows: venv\Scripts\Activate.ps1
+# 2. 网页端
+cd ../web && npm install && npm run dev
 
-# 安装依赖（国内可加 -i https://pypi.tuna.tsinghua.edu.cn/simple 加速）
-pip3 install -r requirements.txt
-
-# 配置环境变量
-cp .env.example .env              # 至少填写 DEEPSEEK_API_KEY 和 MYSQL_PASSWORD
-
-# 启动服务（数据表会在启动时自动创建）
-python3 -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+# 3. 小程序端（需微信开发者工具）
+cd ../frontend && npm install --legacy-peer-deps && npm run dev:weapp
 ```
 
-启动成功后访问 [http://localhost:8000/docs](http://localhost:8000/docs)，能看到 FastAPI 接口文档即为正常。
+MySQL 需要单独准备。完整的环境差异说明（含免安装版 MySQL、Taro prebundle 兼容问题等 5 处坑）见 [docs/本地运行环境记录.md](docs/本地运行环境记录.md)。
 
-> 数据库无需手动创建，`MYSQL_AUTO_INIT=true` 时启动会自动建库建 7 张表。也可以手动执行 `python3 scripts/init_mysql.py`。注意不要用 `sql/init_mysql.sql` 建表，该文件缺少 3 张表。
-
-### 3. 启动前端
-
-**新开一个终端**：
+## 测试
 
 ```bash
-cd frontend
-npm install                       # 国内可加 --registry=https://registry.npmmirror.com
-npm run dev:weapp                 # 编译到 dist/ 并进入监听模式
+cd backend && ./venv/Scripts/python.exe -m pytest -q
+# 165 passed
 ```
 
-然后用微信开发者工具新建项目，**目录选择 `frontend/dist`**，AppID 填测试号 AppID。
+覆盖鉴权与 RBAC、出题与判分、知识库上传与召回、异步任务状态机、成绩聚合。
 
-⚠️ 本地开发必须在开发者工具的「详情」到「本地设置」里 **勾选「不校验合法域名」**，否则请求 `localhost` 会被拦截。
+## 部署
 
-生产构建（自动切换到线上后端地址）：
+Docker Compose 起 `mysql + backend`，宿主机端口只绑 `127.0.0.1:8010`（8000 已被服务器上另一项目占用），Nginx 在 8080 做静态托管与 `/api/` 反代，MySQL 不出内网。逐步命令与踩过的坑见 [docs/服务器部署操作手册.md](docs/服务器部署操作手册.md)。
 
-```bash
-npm run build:weapp
-```
+---
 
-### 4. 运行测试
+## 已知限制（诚实清单）
 
-```bash
-cd backend
-pytest
-```
+- 小程序用测试号，未发布，只能本地开发者工具演示；「关于小程序」面板里的名字由平台分配，改不了。
+- 域名未备案：阿里云对未备案域名在任意端口都会拦截（实测 8080 返回 403 `Non-compliance ICP Filing`），所以对外访问只能用 IP:端口。
+- 成绩海报按钮只弹「开发中」提示，未实现 canvas 绘制。
+- 员工列表时间格式带 `T`（`2026-09-20T18:17:52`），成绩报表是空格分隔，两处不一致，未修。
+- 出题依赖大模型，偶发返回非法 JSON 或题量不足；已做校验与补齐，但没有做多次重试。
 
-测试通过 mock 隔离了大模型和第三方接口调用，不消耗 API 额度。
+---
 
-### 5. 部署
+## 来源与致谢
 
-`backend/Dockerfile` 提供了适配 **微信云托管** 的镜像构建文件，也可用于任意支持 Docker 的容器平台。部署所需的密钥类环境变量（数据库密码、各类 API Key、微信 AppSecret、`JWT_SECRET` 等）请通过平台的环境变量功能注入，**不要** 提交到代码仓库。
+本项目基于 [程序员鱼皮](https://github.com/liyupi) 的开源教学项目 [yu-ai-learn](https://github.com/liyupi/yu-ai-learn)（MIT License）二次开发，原始教程为编程导航《Python 全栈 | AI 闯关学习小程序项目教程》。上游 12 个提交（`d12efdf`…`d68cf0b`）完整保留在本仓库 `main` 分支历史中，本项目的改动叠在其上。
 
-> 上线还需要完成小程序服务类目申请（AI 类需要「深度合成 - AI 问答」类目及资质材料）、ICP 备案、服务器域名白名单配置和代码审核，详细流程见教程第 12 期。
+在原始「AI 闯关学习」骨架之上，独立完成的改造包括：
 
+- **产品重定位**：从个人学习工具改为企业内训考核系统，全链路术语、文案、Prompt 人设重写
+- **网页端整套新增**：管理端 4 页 + 员工端 3 页（React 19 + antd 6），原仓库只有小程序
+- **账号体系**：用户名/密码登录、bcrypt 哈希、JWT `role` + 数据库回查的 RBAC、员工批量建号与停用
+- **考核任务模型**：培训资料 → 考核任务 → 成绩聚合的领域建模，含及格线、截止时间、补考次数
+- **知识库按用户隔离**、成绩报表聚合与下钻
+- **生产部署**：Docker Compose + Nginx 反代 + 安全组策略，以及配套的部署手册与故障排查表
 
+## License
 
-## 加入项目学习
-
-编程导航已有 **近 30 套项目教程！** 每个项目的学习重点不同，从 0 到 1 带做，有大量完整的 **AI 应用开发 + AI 编程 + 全栈项目**，零基础也能学！
-
-详细请见：[https://codefather.cn/course](https://www.codefather.cn/course)（在该页面右侧有教程推荐和学习建议）
-
-![](https://pic.yupi.icu/1/%E9%A1%B9%E7%9B%AE%E6%95%99%E7%A8%8B.png)
-
-欢迎加入 [编程导航](https://www.codefather.cn/vip)，加入后不仅可以全程跟学本项目，往期 **近 30 套原创项目教程** 也都可以无限回看。还能享受更多原创技术资料、学习和求职指导、上百场面试回放视频，开启你的编程起飞之旅~
-
-🧧 助力新项目学习，给大家发放 **限时编程导航优惠券**，扫码即可领券加入。加入三天内不满意可全额退款，欢迎加入体验，名额有限，速来学习！
-
-![](https://pic.yupi.icu/1/437345684-56411098-b60e-4267-8ba2-4ebc5d416afc.png)
-
-1 天不到 1 块钱，绝对是对自己最值的投资！成为编程导航会员后，可以解锁近 30 套项目的教程和资料，PC 网站和 APP 都可以学习，如图：
-
-![](https://pic.yupi.icu/1/image-20250120113756426-20250422160856746.png)
-
+MIT（见 [LICENSE](LICENSE)，版权属原作者 liyupi）

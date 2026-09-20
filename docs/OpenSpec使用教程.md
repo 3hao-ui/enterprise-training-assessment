@@ -1,6 +1,6 @@
 # OpenSpec 使用教程（超简单版）
 
-> 用 OpenSpec 给「鱼皮 AI 闯关学习」项目扩展功能，傻子都能懂的 3 步教程。
+> 用 OpenSpec 给「企业内部培训智能考核系统」项目扩展功能，傻子都能懂的 3 步教程。
 
 ---
 
@@ -21,7 +21,7 @@ npm install -g @fission-ai/openspec@latest
 ### 2. 在项目里初始化
 
 ```bash
-cd c:\code\ai-code\yu-ai-learn
+cd enterprise-training-assessment
 openspec init --tools github-copilot
 ```
 
