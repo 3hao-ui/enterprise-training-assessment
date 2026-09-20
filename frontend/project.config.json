@@ -4,7 +4,7 @@
   "description": "企业内部培训智能考核系统 · 微信小程序端",
   "appid": "wxa0a2a8ad99048c7c",
   "setting": {
-    "urlCheck": true,
+    "urlCheck": false,
     "es6": false,
     "enhance": false,
     "compileHotReLoad": false,

@@ -229,6 +229,8 @@ export function uploadKnowledgeDocument(filePath: string, fileName: string): Pro
       filePath,
       name: 'file',
       fileName,
+      // 开发者工具不采用 fileName，multipart 里会变成随机临时名，故再显式传一份
+      formData: { file_name: fileName },
       header,
       timeout: 120000,
       success: (res) => {

@@ -54,6 +54,27 @@ class TestKnowledgeUploadAPI:
         assert body["data"]["doc_id"] == "doc_abc123"
         assert body["data"]["status"] == "processing"
 
+    async def test_upload_prefers_explicit_file_name(self, auth_header):
+        """小程序上传会丢失 multipart filename，后端必须采用显式传入的 file_name"""
+        handle = AsyncMock(
+            return_value=KnowledgeUploadResponse(
+                doc_id="doc_abc124", file_name="考勤制度.md", status="processing"
+            )
+        )
+        with patch(
+            "app.api.v1.routes.knowledge.knowledge_service.handle_upload", handle
+        ):
+            transport = ASGITransport(app=app)
+            async with AsyncClient(transport=transport, base_url="http://test") as client:
+                resp = await client.post(
+                    "/api/v1/knowledge/documents",
+                    files={"file": ("xRav3f9ab6dfc38.md", b"hello", "text/markdown")},
+                    data={"file_name": "考勤制度.md"},
+                    headers=auth_header,
+                )
+        assert resp.status_code == 200
+        assert handle.await_args.kwargs["filename"] == "考勤制度.md"
+
     async def test_upload_rejects_invalid_document(self, auth_header):
         with patch(
             "app.api.v1.routes.knowledge.knowledge_service.handle_upload",

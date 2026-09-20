@@ -1,6 +1,6 @@
 """知识库文档路由"""
 
-from fastapi import APIRouter, Depends, UploadFile, File
+from fastapi import APIRouter, Depends, File, Form, UploadFile
 
 from app.core.auth import get_current_user
 from app.models.common import ApiResponse
@@ -12,11 +12,16 @@ router = APIRouter(prefix="/knowledge", tags=["knowledge"])
 @router.post("/documents", response_model=ApiResponse)
 async def upload_document(
     file: UploadFile = File(...),
+    file_name: str | None = Form(
+        None, description="客户端显式指定的原始文件名；小程序会丢失 multipart filename"
+    ),
     user_id: int = Depends(get_current_user),
 ):
     content = await file.read()
     result = await knowledge_service.handle_upload(
-        user_id=user_id, filename=file.filename or "unknown", content=content
+        user_id=user_id,
+        filename=file_name or file.filename or "unknown",
+        content=content,
     )
     return ApiResponse.success(data=result.model_dump())
 
