@@ -1,5 +1,6 @@
 """考核任务 API 集成测试（大模型与数据库均 mock）"""
 
+from datetime import datetime, timedelta
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -182,6 +183,59 @@ class TestAssessmentEmployeeAPI:
         assert body["accuracy"] == 100
         assert body["passed"] is True
         assert mock_record.call_args.kwargs["duration_seconds"] == 5
+
+    async def _submit_with_created_at(self, created_at: str):
+        """以指定的会话创建时间提交一次全对的考核。"""
+        add_record = AsyncMock()
+        with _patch_current(EMP), patch(
+            "app.services.assessment_service.assessment_repository.get_assessment",
+            new=AsyncMock(return_value={"assessment_id": "asmt_1", "status": "open",
+                                        "deadline": "", "title": "TCP 考核",
+                                        "pass_accuracy": 60.0}),
+        ), patch(
+            "app.services.assessment_service.quiz_repository.get_quiz_detail",
+            new=AsyncMock(return_value={
+                "quiz_id": "quiz_1", "title": "t", "summary": "s",
+                "questions": [q.model_dump() for q in [_question()]],
+                "created_at": created_at,
+            }),
+        ), patch(
+            "app.services.assessment_service.generate_report",
+            new=AsyncMock(return_value=_report_output()),
+        ), patch(
+            "app.services.assessment_service.quiz_repository.save_answer_record",
+            new=AsyncMock(),
+        ), patch(
+            "app.services.assessment_service.quiz_repository.save_report",
+            new=AsyncMock(),
+        ), patch(
+            "app.services.assessment_service.assessment_repository.add_record", add_record
+        ):
+            transport = ASGITransport(app=app)
+            async with AsyncClient(transport=transport, base_url="http://test") as client:
+                resp = await client.post(
+                    "/api/v1/assessments/asmt_1/submit",
+                    headers=_header(EMP),
+                    json={"quiz_id": "quiz_1",
+                          "answers": [{"question_id": "q1", "selected_answers": ["B"],
+                                       "duration_ms": 5000}]},
+                )
+        return resp.json(), add_record
+
+    async def test_submit_rejected_after_answer_window(self):
+        """超过作答窗口（默认 30 分钟）的提交必须被拒，且不得写入成绩。"""
+        stale = (datetime.now() - timedelta(minutes=31)).strftime("%Y-%m-%d %H:%M:%S")
+        body, add_record = await self._submit_with_created_at(stale)
+        assert body["code"] != 0
+        assert "30 分钟" in body["message"]
+        add_record.assert_not_awaited()
+
+    async def test_submit_within_answer_window(self):
+        """窗口内的提交必须照常成功，防止把正常作答一起拦掉。"""
+        fresh = (datetime.now() - timedelta(minutes=2)).strftime("%Y-%m-%d %H:%M:%S")
+        body, add_record = await self._submit_with_created_at(fresh)
+        assert body["code"] == 0
+        add_record.assert_awaited()
 
     async def test_submit_wrong_answer_not_passed(self):
         questions = [_question()]

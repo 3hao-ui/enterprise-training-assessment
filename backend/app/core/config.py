@@ -78,6 +78,9 @@ class Settings(BaseSettings):
     mysql_pool_maxsize: int = 10
     mysql_auto_init: bool = True
 
+    # 考核作答窗口（分钟）：从点「开始考核」起超过该时长再提交视为无效
+    assessment_window_minutes: int = 30
+
     # Log
     log_level: str = "INFO"
 

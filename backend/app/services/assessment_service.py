@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Optional
 
 import structlog
 
+from app.core.config import get_settings
 from app.core.exceptions import BusinessError
 from app.llm.report_chain import generate_report
 from app.models.assessment import (
@@ -44,6 +45,18 @@ def _is_expired(item: dict) -> bool:
     return bool(item["deadline"]) and datetime.now() > datetime.strptime(
         item["deadline"], "%Y-%m-%d %H:%M:%S"
     )
+
+
+def _parse_session_start(raw: Optional[str]) -> Optional[datetime]:
+    """解析 quiz_sessions.created_at；解析失败时返回 None 放行，
+    不能因为时间格式问题把正常提交卡死。"""
+    if not raw:
+        return None
+    try:
+        return datetime.strptime(raw, "%Y-%m-%d %H:%M:%S")
+    except ValueError:
+        logger.warning("session_start_unparsable", raw=raw)
+        return None
 
 
 async def create_assessment(admin: dict, req: AssessmentCreateRequest) -> dict:
@@ -144,6 +157,13 @@ async def submit_assessment(
     detail = await quiz_repository.get_quiz_detail(req.quiz_id, user["id"])
     if detail is None:
         raise BusinessError("答题会话不存在")
+
+    # 作答窗口按「开始考核」的时间起算，而不是比对 deadline：
+    # 后者会误伤在截止前开始、正常作答中跨过截止点的人
+    window = get_settings().assessment_window_minutes
+    started_at = _parse_session_start(detail.get("created_at"))
+    if started_at and datetime.now() - started_at > timedelta(minutes=window):
+        raise BusinessError(f"作答已超过 {window} 分钟，本次提交无效，请重新参加考核")
 
     questions = [Question(**q) for q in detail["questions"]]
     answers = {a.question_id: a for a in req.answers}
