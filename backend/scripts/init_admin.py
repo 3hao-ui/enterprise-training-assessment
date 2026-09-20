@@ -1,4 +1,4 @@
-"""初始化管理员账号：python -m scripts.init_admin <用户名> <密码>"""
+"""初始化管理员账号：python -m scripts.init_admin <用户名> <密码> [昵称]"""
 
 import asyncio
 import sys
@@ -12,7 +12,7 @@ from app.core.config import get_settings
 from app.core.password import hash_password
 
 
-async def init_admin(username: str, password: str) -> None:
+async def init_admin(username: str, password: str, nickname: str = "") -> None:
     settings = get_settings()
     conn = await aiomysql.connect(
         host=settings.mysql_host,
@@ -26,7 +26,7 @@ async def init_admin(username: str, password: str) -> None:
     try:
         async with conn.cursor() as cursor:
             await cursor.execute(
-                "SELECT id FROM users WHERE username = %s", (username,)
+                "SELECT id, nickname FROM users WHERE username = %s", (username,)
             )
             row = await cursor.fetchone()
             password_hash = hash_password(password)
@@ -36,12 +36,17 @@ async def init_admin(username: str, password: str) -> None:
                     "WHERE username = %s",
                     (password_hash, username),
                 )
+                if nickname:
+                    await cursor.execute(
+                        "UPDATE users SET nickname = %s WHERE username = %s",
+                        (nickname, username),
+                    )
                 print(f"管理员已存在，密码已重置: {username} (id={row[0]})")
             else:
                 await cursor.execute(
-                    "INSERT INTO users (username, password_hash, role, department, status) "
-                    "VALUES (%s, %s, 'admin', '系统管理', 1)",
-                    (username, password_hash),
+                    "INSERT INTO users (username, password_hash, role, department, nickname, status) "
+                    "VALUES (%s, %s, 'admin', '系统管理', %s, 1)",
+                    (username, password_hash, nickname or username),
                 )
                 await cursor.execute("SELECT LAST_INSERT_ID()")
                 new_id = (await cursor.fetchone())[0]
@@ -52,6 +57,6 @@ async def init_admin(username: str, password: str) -> None:
 
 if __name__ == "__main__":
     if len(sys.argv) < 3:
-        print("用法: python -m scripts.init_admin <用户名> <密码>")
+        print("用法: python -m scripts.init_admin <用户名> <密码> [昵称]")
         sys.exit(1)
-    asyncio.run(init_admin(sys.argv[1], sys.argv[2]))
+    asyncio.run(init_admin(sys.argv[1], sys.argv[2], sys.argv[3] if len(sys.argv) > 3 else ""))
